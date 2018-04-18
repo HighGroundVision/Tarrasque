@@ -1,13 +1,11 @@
-using System;
-using System.Linq;
-using System.IO;
-using System.Threading.Tasks;
+using HGV.Daedalus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage.Queue;
-using HGV.Daedalus;
 using Newtonsoft.Json;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.Functions
 {
