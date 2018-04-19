@@ -12,7 +12,9 @@ namespace HGV.Tarrasque.Functions
             // Timer (once/day at 00:00)
             [TimerTrigger("0 0 * * *")]TimerInfo myTimer,
             // Output Queues
-            [Queue("hgv-ad-stats")]string queueAdStats,
+            [Queue("hgv-ad-stats-abilities")]string queueStatsADAbilities,
+            [Queue("hgv-ad-stats-combos")]string queueStatsADCombos,
+            [Queue("hgv-ad-stats-drafts")]string queueStatsADDrafts,
             // Logger
             TraceWriter log
             )
@@ -23,7 +25,9 @@ namespace HGV.Tarrasque.Functions
             var day = DateTime.UtcNow.AddDays(-1).DayOfYear.ToString();
 
             // Queues
-            queueAdStats = day;
+            queueStatsADAbilities = day;
+            queueStatsADCombos = day;
+            queueStatsADDrafts = day;
         }
     }
 }
