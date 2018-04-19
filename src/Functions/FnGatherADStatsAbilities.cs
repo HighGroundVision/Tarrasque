@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using HGV.Tarrasque.Data;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -14,27 +15,37 @@ namespace HGV.Tarrasque.Functions
         [FunctionName("FnGatherADStatsAbilities")]
         public static async Task Run(
             // Queue with {day}
-            [QueueTrigger("hgv-ad-stats-abilities")]string item,
-            // Blob with matches
-            [Blob("hgv-matches/{queueTrigger}/18")]CloudBlobDirectory directory,
+            [QueueTrigger("hgv-ad-stats-abilities")]string day,
             // AD Stats Tables
             [Table("hgv-ad-stats-abilities")]CloudTable tableAbilities,
-            // Binder (dynamic output binding)
-            Binder binder,
+            // Blob with matches
+            [Blob("hgv-matches/{queueTrigger}/18")]CloudBlobDirectory matchesDirectory,
+            // Blob with stats
+            [Blob("hgv-stats/18/abilities/")]CloudBlobDirectory statsDirectory,
             // Logger
             TraceWriter log
         )
         {
             log.Info($"FnGatherADStatsAbilities started at: {DateTime.Now}");
 
-            var totalMatches = await CountMatches(directory);
+            var totalMatches = await CountMatches(matchesDirectory);
 
-            /*
-            var attr = new BlobAttribute($"hgv-stats/18/abilities/{item}");
-            using (var writer = await binder.BindAsync<TextWriter>(attr))
+            var query = new TableQuery<AbilityADStat>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, day));
+
+            TableContinuationToken continuationToken = null;
+            do
             {
-            }
-            */
+                var response = await tableAbilities.ExecuteQuerySegmentedAsync(query, continuationToken);
+                continuationToken = response.ContinuationToken;
+
+                foreach (var item in response.Results)
+                {
+                    // item.AbilityId
+                    // item.Picks
+                    // item.Wins
+                    // item.Kills
+                }
+            } while (continuationToken != null);
         }
 
         private static async Task<int> CountMatches(CloudBlobDirectory directoryAll, int blockSize = 100)

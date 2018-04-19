@@ -26,8 +26,8 @@ namespace HGV.Tarrasque.Functions
 
             // Queues
             queueStatsADAbilities = day;
-            queueStatsADCombos = day;
-            queueStatsADDrafts = day;
+            //queueStatsADCombos = day;
+            //queueStatsADDrafts = day;
         }
     }
 }
