@@ -1,4 +1,5 @@
 using HGV.Daedalus;
+using HGV.Tarrasque.Data;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
@@ -23,10 +24,15 @@ namespace HGV.Tarrasque.Functions
         [FunctionName("GetMatchHistoryInSequence")]
         [StorageAccount("AzureWebJobsStorage")]
         public static async Task Run(
+            // Next File holding Json with the next match # as Input
             [BlobTrigger("hgv-master/next.json")]TextReader tirggerBlob,
+            // Configuration File
             [Blob("hgv-master/config.json", System.IO.FileAccess.Read)]TextReader configBlob,
+            // Next File holding Json with the next match # as Output
             [Blob("hgv-master/next.json", System.IO.FileAccess.ReadWrite)]TextWriter outputBlob,
+            // Binder (dynamic output binding)
             Binder binder,
+            // Logger
             TraceWriter log)
         {
             var serailizer = JsonSerializer.CreateDefault();
@@ -34,12 +40,18 @@ namespace HGV.Tarrasque.Functions
             var next = (Next)serailizer.Deserialize(tirggerBlob, typeof(Next));
 
             if (String.IsNullOrWhiteSpace(config.SteamKey))
-                throw new ApplicationException("config.json has not been initalized.");
+            {
+                log.Error($"Fn-GetMatchHistoryInSequence(): Error SteamKey not initialized.");
+                return;
+            }
 
             if (next.MatchNumber == 0)
-                throw new ApplicationException("next.json has not been initalized.");
+            {
+                log.Error($"Fn-GetMatchHistoryInSequence(): Error MatchNumber not initialized.");
+                return;
+            }
 
-            log.Info($"Fn-GetMatchHistoryInSequence({next.MatchNumber}) executed at: {DateTime.UtcNow}");
+            log.Info($"Fn-GetMatchHistoryInSequence({next.MatchNumber}): started at {DateTime.UtcNow}");
 
             using (var client = new DotaApiClient(config.SteamKey))
             {
@@ -48,10 +60,6 @@ namespace HGV.Tarrasque.Functions
 
                 foreach (var match in matches)
                 {
-                    // Duration Gruad
-                    if (match.duration < 900)
-                        continue;
-
                     var day = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(match.start_time).DayOfYear;
                     var attr = new BlobAttribute($"hgv-matches/{day}/{match.game_mode:00}/{match.match_id}");
                     using (var writer = await binder.BindAsync<TextWriter>(attr))

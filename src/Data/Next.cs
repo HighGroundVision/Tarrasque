@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.Functions
+namespace HGV.Tarrasque.Data
 {
     public class Next
     {

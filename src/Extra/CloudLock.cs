@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace Lixar.Azure.Storage
+namespace HGV.Tarrasque.Extras
 {
     /// <summary>
     /// Implementation of a Cloud Lock that acquires and auto renews a Blob Lease.
