@@ -8,6 +8,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace HGV.Tarrasque.Functions
 {
+    /*
     public static class FnGatherADStatsDrafts
     {
         [StorageAccount("AzureWebJobsStorage")]
@@ -18,7 +19,7 @@ namespace HGV.Tarrasque.Functions
             // Blob with matches / day
             [Blob("hgv-matches/{queueTrigger}/18")]CloudBlobDirectory directory,
             // AD Stats Tables
-            [Table("hgv-ad-stats-drafts")]CloudTable tableDrafts,
+            [Table("HGVAdStatsDrafts")]CloudTable tableDrafts,
             // Binder (dynamic output binding)
             Binder binder,
             // Logger
@@ -28,13 +29,6 @@ namespace HGV.Tarrasque.Functions
             log.Info($"FnGatherADStatsDrafts started at: {DateTime.Now}");
 
             var totalMatches = await CountMatches(directory);
-
-            /*
-            var attr = new BlobAttribute($"hgv-stats/18/abilities/{item}");
-            using (var writer = await binder.BindAsync<TextWriter>(attr))
-            {
-            }
-            */
         }
 
         private static async Task<int> CountMatches(CloudBlobDirectory directoryAll, int blockSize = 100)
@@ -52,4 +46,5 @@ namespace HGV.Tarrasque.Functions
             return totalMatches;
         }
     }
+    */
 }

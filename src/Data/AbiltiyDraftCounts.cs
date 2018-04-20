@@ -6,16 +6,18 @@ using System.Text;
 
 namespace HGV.Tarrasque.Data
 {
-    public abstract class AbiltiyDraftStat : TableEntity
+    public abstract class AbiltiyDraftCounts : TableEntity
     {
+        public int Picks { get; set; }
         public int Wins { get; set; }
         public int Kills { get; set; }
-        public int Picks { get; set; }
+        public int Deaths { get; set; }
+        public int Assist { get; set; }
     }
 
-    public class AbilityADStat : AbiltiyDraftStat
+    public class AbilityCount : AbiltiyDraftCounts
     {
-        public AbilityADStat(int date, int ability)
+        public AbilityCount(int date, int ability)
         {
             this.PartitionKey = date.ToString();
             this.RowKey = ability.ToString();
@@ -25,16 +27,16 @@ namespace HGV.Tarrasque.Data
             this.Picks = 1;
         }
 
-        public AbilityADStat() { }
+        public AbilityCount() { }
 
         public int AbilityId { get; set; }
 
     }
 
-    public class ComboADStat : AbiltiyDraftStat
+    public class ComboCount : AbiltiyDraftCounts
     {
 
-        public ComboADStat(int date, int ability1, int ability2)
+        public ComboCount(int date, int ability1, int ability2)
         {
             var abilities = new List<int>() { ability1, ability2 };
             var key = String.Join("-", abilities.OrderBy(_ => _).ToArray());
@@ -48,15 +50,15 @@ namespace HGV.Tarrasque.Data
             this.Picks = 1;
         }
 
-        public ComboADStat() { }
+        public ComboCount() { }
 
         public int Ability1Id { get; set; }
         public int Ability2Id { get; set; }
     }
 
-    public class DraftADStat : AbiltiyDraftStat
+    public class DraftCount : AbiltiyDraftCounts
     {
-        public DraftADStat(int date, int ability1, int ability2, int ability3, int ability4)
+        public DraftCount(int date, int ability1, int ability2, int ability3, int ability4)
         {
             var abilities = new List<int>() { ability1, ability2, ability3, ability4 };
             var key = String.Join("-", abilities.OrderBy(_ => _).ToArray());
@@ -72,7 +74,7 @@ namespace HGV.Tarrasque.Data
             this.Picks = 1;
         }
 
-        public DraftADStat() { }
+        public DraftCount() { }
 
         public int Ability1Id { get; set; }
         public int Ability2Id { get; set; }

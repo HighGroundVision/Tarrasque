@@ -19,12 +19,14 @@ namespace HGV.Tarrasque.Functions
         public static async Task Run(
             // Process only matches for that {day} and only for AD (18) matches
             [BlobTrigger("hgv-matches/{day}/18/{id}")]TextReader inputBlob, int day, long id,
+            // Configuration File
+            [Blob("hgv-master/valid-abilities.json", System.IO.FileAccess.Read)]TextReader abilitiesBlob,
             // Table to store the ability counts
-            [Table("hgv-ad-stats-abilities")]CloudTable abilities,
+            [Table("HGVAdStatsAbilities")]CloudTable abilities,
             // Table to store the combo counts
-            [Table("hgv-ad-stats-combos")]CloudTable combos,
+            [Table("HGVAdStatsCombos")]CloudTable combos,
             // Table to store the draft counts
-            [Table("hgv-ad-stats-drafts")]CloudTable drafts,
+            [Table("HGVAdStatsDrafts")]CloudTable drafts,
             // Logger
             TraceWriter log)
         {
@@ -32,6 +34,7 @@ namespace HGV.Tarrasque.Functions
 
             var serailizer = JsonSerializer.CreateDefault();
             var match = (Match)serailizer.Deserialize(inputBlob, typeof(Match));
+            var validAbilities = (List<int>)serailizer.Deserialize(abilitiesBlob, typeof(List<int>));
 
             // Duration Gruad
             if (match.duration < 900)
@@ -45,22 +48,23 @@ namespace HGV.Tarrasque.Functions
             {
                 try
                 {
-                    var upgrades = player.ability_upgrades.Select(_ => _.ability).Distinct().OrderBy(_ => _).ToList();
-
+                    var upgrades = player.ability_upgrades.Select(_ => _.ability).Distinct().ToList();
+                    var skills = upgrades.Intersect(validAbilities).OrderBy(_ => _).ToList();
+                    
                     // Ability Gruad
-                    if (upgrades.Count != 4)
+                    if (skills.Count != 4)
                         continue;
 
                     var result = player.player_slot < 6 ? match.radiant_win : !match.radiant_win;
 
                     // Drafts(4)
-                    await ProcessDraft(day, drafts, player, upgrades, result);
+                    await ProcessDraft(day, drafts, player, skills, result);
 
                     // Combos(2)[x6]
-                    await ProcessCombos(day, combos, player, upgrades, result);
+                    await ProcessCombos(day, combos, player, skills, result);
 
                     // Abilities(1)[X4]
-                    await ProcessAbilties(day, abilities, player, upgrades, result);
+                    await ProcessAbilties(day, abilities, player, skills, result);
                 }
                 catch (Exception ex)
                 {
@@ -71,7 +75,7 @@ namespace HGV.Tarrasque.Functions
 
         private static async Task ProcessDraft(int day, CloudTable table, Player player, List<int> upgrades, bool result)
         {
-            var entity = new DraftADStat(day, upgrades[0], upgrades[1], upgrades[2], upgrades[4]);
+            var entity = new DraftCount(day, upgrades[0], upgrades[1], upgrades[2], upgrades[3]);
             await CreateOrUpdate(table, player, result, entity);
         }
 
@@ -80,7 +84,7 @@ namespace HGV.Tarrasque.Functions
             var pairs = upgrades.SelectMany((lhs, i) => upgrades.Skip(i + 1).Select(rhs => Tuple.Create<int, int>(lhs, rhs)));
             foreach (var pair in pairs)
             {
-                var entity = new ComboADStat(day, pair.Item1, pair.Item2);
+                var entity = new ComboCount(day, pair.Item1, pair.Item2);
                 await CreateOrUpdate(table, player, result, entity);
             }
         }
@@ -89,12 +93,12 @@ namespace HGV.Tarrasque.Functions
         {
             foreach (var ability in upgrades)
             {
-                var entity = new AbilityADStat(day, ability);
+                var entity = new AbilityCount(day, ability);
                 await CreateOrUpdate(table, player, result, entity);
             }
         }
 
-        private static async Task CreateOrUpdate<T>(CloudTable table, Player player, bool result, T entity) where T : AbiltiyDraftStat
+        private static async Task CreateOrUpdate<T>(CloudTable table, Player player, bool result, T entity) where T : AbiltiyDraftCounts
         {
             TableOperation retrieveOperation = TableOperation.Retrieve<T>(entity.PartitionKey, entity.RowKey);
             TableResult retrievedResult = await table.ExecuteAsync(retrieveOperation);
@@ -103,6 +107,8 @@ namespace HGV.Tarrasque.Functions
                 // Create
                 entity.Kills = player.kills;
                 entity.Wins = result ? 1 : 0;
+                entity.Deaths = player.death;
+                entity.Assist = player.assists;
 
                 TableOperation insertOperation = TableOperation.Insert(entity);
                 await table.ExecuteAsync(insertOperation);
@@ -111,8 +117,10 @@ namespace HGV.Tarrasque.Functions
             {
                 // Update
                 entity = (T)retrievedResult.Result;
-                entity.Kills += player.kills;
                 entity.Wins += result ? 1 : 0;
+                entity.Kills += player.kills;
+                entity.Deaths += player.death;
+                entity.Assist += player.assists;
                 entity.Picks++;
 
                 // Replace
