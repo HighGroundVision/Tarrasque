@@ -6,6 +6,11 @@ namespace HGV.Tarrasque.Data
 {
     public class AbilityDraftStat
     {
+        public AbilityDraftStat()
+        {
+            this.Abilities = new List<int>();
+        }
+
         public List<int> Abilities { get; set; }
 
         public int Total { get; set; }

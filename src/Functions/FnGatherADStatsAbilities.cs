@@ -56,13 +56,16 @@ namespace HGV.Tarrasque.Functions
         private static async Task ProcessItem(TraceWriter log, CloudBlobDirectory statsDirectory, int totalMatches, AbilityCount item)
         {
             var blob = statsDirectory.GetBlockBlobReference(item.RowKey);
+
+            string leaseId = string.Empty;
             try
             {
+                leaseId = await blob.AcquireLeaseAsync(TimeSpan.FromSeconds(60));
+
                 AbilityDraftStat stats;
                 var exists = await blob.ExistsAsync();
                 if (exists == true)
                 {
-                    var leaseId = await blob.AcquireLeaseAsync(TimeSpan.FromSeconds(60));
                     var jsonDonwload = await blob.DownloadTextAsync();
                     stats = JsonConvert.DeserializeObject<AbilityDraftStat>(jsonDonwload);
                 }
@@ -78,8 +81,8 @@ namespace HGV.Tarrasque.Functions
                 stats.Kills += item.Kills;
                 stats.Deaths += item.Deaths;
                 stats.Assist += item.Assist;
-                stats.WinRate = stats.Wins / stats.Total;
-                stats.PickRate = stats.Picks / stats.Total;
+                stats.WinRate = (float)stats.Wins / (float)stats.Total;
+                stats.PickRate = (float)stats.Picks / (float)stats.Total;
 
                 var jsonUpload = JsonConvert.SerializeObject(stats);
                 await blob.UploadTextAsync(jsonUpload);
@@ -90,7 +93,10 @@ namespace HGV.Tarrasque.Functions
             }
             finally
             {
-                await blob.ReleaseLeaseAsync(AccessCondition.GenerateEmptyCondition());
+                if(string.IsNullOrWhiteSpace(leaseId))
+                {
+                    await blob.ReleaseLeaseAsync(AccessCondition.GenerateLeaseCondition(leaseId));
+                }
             }
         }
 
