@@ -28,7 +28,7 @@ namespace HGV.Tarrasque.Functions
             [Table("HGVAdStatsAbilities")]CloudTable tableAbilities,
             // Blob with matches
             [Blob("hgv-matches/{queueTrigger}/18")]CloudBlobDirectory matchesDirectory,
-            // Blob with stats
+            // Blob with stats (Needs to be seeded!)
             [Blob("hgv-stats/18/abilities")]CloudBlobDirectory statsDirectory,
             // Logger
             TraceWriter log
@@ -38,7 +38,9 @@ namespace HGV.Tarrasque.Functions
 
             var totalMatches = await CountMatches(matchesDirectory);
 
-            var query = new TableQuery<AbilityCount>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, day));
+            var query = new TableQuery<AbilityCount>().Where(
+                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, day)
+            );
 
             TableContinuationToken continuationToken = null;
             do
@@ -60,12 +62,11 @@ namespace HGV.Tarrasque.Functions
             string leaseId = string.Empty;
             try
             {
-                leaseId = await blob.AcquireLeaseAsync(TimeSpan.FromSeconds(60));
-
                 AbilityDraftStat stats;
                 var exists = await blob.ExistsAsync();
                 if (exists == true)
                 {
+                    leaseId = await blob.AcquireLeaseAsync(TimeSpan.FromSeconds(15));
                     var jsonDonwload = await blob.DownloadTextAsync();
                     stats = JsonConvert.DeserializeObject<AbilityDraftStat>(jsonDonwload);
                 }
