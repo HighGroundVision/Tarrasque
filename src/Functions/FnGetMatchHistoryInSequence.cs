@@ -12,15 +12,6 @@ namespace HGV.Tarrasque.Functions
 {
     public static class FnGetMatchHistoryInSequence
     {
-        /*
-        Heroes	        104 
-        Skills	        312 
-        Utlimates	    98 
-        Abilities	    410 
-        Skill Triads    97,032 
-        Ability Drafts  9,509,136 
-        */
-
         [FunctionName("GetMatchHistoryInSequence")]
         [StorageAccount("AzureWebJobsStorage")]
         public static async Task Run(
