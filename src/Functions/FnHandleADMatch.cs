@@ -1,12 +1,9 @@
 using HGV.Daedalus.GetMatchDetails;
-using HGV.Tarrasque.Data;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
-using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,47 +15,42 @@ namespace HGV.Tarrasque.Functions
         [FunctionName("HandleADMatch")]
         public static async Task Run(
             // Process only matches for AD (18) matches
-            [BlobTrigger("hgv-matches/{id}")]TextReader inputBlob, long id,
-            // Configuration File
-            [Blob("hgv-master/valid-abilities.json", System.IO.FileAccess.Read)]TextReader abilitiesBlob,
+            [BlobTrigger("hgv-matches/{id}.json")]CloudBlockBlob matchBlob, long id,
             // Logger
             TraceWriter log)
         {
             log.Info($"Fn-HandleADMatch({id}): started at {DateTime.UtcNow}");
-
-            var serailizer = JsonSerializer.CreateDefault();
-            var match = (Match)serailizer.Deserialize(inputBlob, typeof(Match));
-            var validAbilities = (List<int>)serailizer.Deserialize(abilitiesBlob, typeof(List<int>));
-
+            
+            var matchJson = await matchBlob.DownloadTextAsync();
+            var match = JsonConvert.DeserializeObject<Match>(matchJson);
             foreach (var player in match.players)
             {
                 try
                 {
-                    var upgrades = player.ability_upgrades.Select(_ => _.ability).Distinct().ToList();
-                    var skills = upgrades.Intersect(validAbilities).OrderBy(_ => _).ToList();
+                    var upgrades = player.ability_upgrades.Select(_ => _.ability).Distinct().OrderBy(_ => _).ToList();
                     
                     // Ability Gruad
-                    if (skills.Count != 4)
+                    if (upgrades.Count != 4)
                         continue;
 
                     var result = player.player_slot < 6 ? match.radiant_win : !match.radiant_win;
 
-                    // Drafts(4)
-                    //await ProcessDraft(day, drafts, player, skills, result);
+                    // Drafts
 
-                    // Combos(2)[x6]
-                    //await ProcessCombos(day, combos, player, skills, result);
+                    // Combos
 
-                    // Abilities(1)[X4]
-                    //await ProcessAbilties(day, abilities, player, skills, result);
+                    // Abilities
                 }
                 catch (Exception ex)
                 {
                     log.Error($"Fn-HandleAbilityDraftMatch({id}): Error processing Player({player.player_slot}) abilities", ex);
                 }
             }
+
+            await matchBlob.DeleteAsync();
         }
 
+        /*
         private static async Task ProcessDraft(int day, CloudTable table, Player player, List<int> upgrades, bool result)
         {
             var entity = new DraftCount(day, upgrades[0], upgrades[1], upgrades[2], upgrades[3]);
@@ -115,5 +107,6 @@ namespace HGV.Tarrasque.Functions
 
             }
         }
+        */
     }
 }

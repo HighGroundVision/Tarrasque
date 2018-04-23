@@ -1,5 +1,5 @@
 using HGV.Daedalus;
-using HGV.Tarrasque.Data;
+using HGV.Tarrasque.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
@@ -39,48 +39,80 @@ namespace HGV.Tarrasque.Functions
             var config = (Config)serailizer.Deserialize(configBlob, typeof(Config));
             var next = (Next)serailizer.Deserialize(tirggerBlob, typeof(Next));
 
+            // Config Gruad
             if (String.IsNullOrWhiteSpace(config.SteamKey))
             {
                 log.Error($"Fn-GetMatchHistoryInSequence(): Error SteamKey not initialized.");
                 return;
             }
 
-            if (next.MatchNumber == 0)
-            {
-                log.Error($"Fn-GetMatchHistoryInSequence(): Error MatchNumber not initialized.");
-                return;
-            }
-
             log.Info($"Fn-GetMatchHistoryInSequence({next.MatchNumber}): started at {DateTime.UtcNow}");
+
+            // Seed [Next]
+            await SeedNext(config, next, log);
+
+            // Output [Matches]
+            await ProcessMatches(config, next, serailizer, binder, log);
+
+            // Output [Next]
+            OutputNext(next, outputBlob, serailizer);
+        }
+
+        private static void OutputNext(Next next, TextWriter outputBlob, JsonSerializer serailizer)
+        {
+            serailizer.Serialize(outputBlob, next);
+        }
+
+        static private async Task SeedNext(Config config, Next next, TraceWriter log)
+        {
+            if (next.MatchNumber != 0)
+                return;
 
             using (var client = new DotaApiClient(config.SteamKey))
             {
-                var matches = await client.GetMatchesInSequence(next.MatchNumber);
+                var matches = await client.GetLastestMatches();
                 next.MatchNumber = matches.Max(_ => _.match_seq_num) + 1;
+                next.TotalMatches = 0;
+            }
+        }
 
-                foreach (var match in matches)
+        static private async Task ProcessMatches(Config config, Next next, JsonSerializer serailizer, Binder binder, TraceWriter log)
+        {
+            try
+            {
+                using (var client = new DotaApiClient(config.SteamKey))
                 {
-                    // Duration Gruad
-                    if (match.duration < 900)
-                        return;
+                    var matches = await client.GetMatchesInSequence(next.MatchNumber);
+                    next.MatchNumber = matches.Max(_ => _.match_seq_num) + 1;
 
-                    // Player Gruad
-                    if (match.human_players != 10 || match.players.Count != 10)
-                        return;
-
-                    // Mode Gruad
-                    if (config.ActiveModes.Contains(match.game_mode) == false)
-                        continue;
-
-                    var attr = new BlobAttribute($"hgv-matches/{match.match_id}");
-                    using (var writer = await binder.BindAsync<TextWriter>(attr))
+                    foreach (var match in matches)
                     {
-                        serailizer.Serialize(writer, match);
+                        // Duration Gruad
+                        if (match.duration < 900)
+                            return;
+
+                        // Player Gruad
+                        if (match.human_players != 10 || match.players.Count != 10)
+                            return;
+
+                        // Mode Gruad
+                        if (config.ActiveModes.Contains(match.game_mode) == false)
+                            continue;
+
+                        next.TotalMatches++;
+
+                        var attr = new BlobAttribute($"hgv-matches/{match.match_id}.json");
+                        using (var writer = await binder.BindAsync<TextWriter>(attr))
+                        {
+                            serailizer.Serialize(writer, match);
+                        }
                     }
                 }
             }
-
-            serailizer.Serialize(outputBlob, next);
+            catch (Exception)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(30));
+            }
         }
     }
 }
