@@ -17,16 +17,10 @@ namespace HGV.Tarrasque.Functions
         [StorageAccount("AzureWebJobsStorage")]
         [FunctionName("HandleADMatch")]
         public static async Task Run(
-            // Process only matches for that {day} and only for AD (18) matches
-            [BlobTrigger("hgv-matches/{day}/18/{id}")]TextReader inputBlob, int day, long id,
+            // Process only matches for AD (18) matches
+            [BlobTrigger("hgv-matches/{id}")]TextReader inputBlob, long id,
             // Configuration File
             [Blob("hgv-master/valid-abilities.json", System.IO.FileAccess.Read)]TextReader abilitiesBlob,
-            // Table to store the ability counts
-            [Table("HGVAdStatsAbilities")]CloudTable abilities,
-            // Table to store the combo counts
-            [Table("HGVAdStatsCombos")]CloudTable combos,
-            // Table to store the draft counts
-            [Table("HGVAdStatsDrafts")]CloudTable drafts,
             // Logger
             TraceWriter log)
         {
@@ -35,14 +29,6 @@ namespace HGV.Tarrasque.Functions
             var serailizer = JsonSerializer.CreateDefault();
             var match = (Match)serailizer.Deserialize(inputBlob, typeof(Match));
             var validAbilities = (List<int>)serailizer.Deserialize(abilitiesBlob, typeof(List<int>));
-
-            // Duration Gruad
-            if (match.duration < 900)
-                return;
-
-            // Player Gruad
-            if (match.human_players != 10 || match.players.Count != 10)
-                return;
 
             foreach (var player in match.players)
             {
@@ -58,13 +44,13 @@ namespace HGV.Tarrasque.Functions
                     var result = player.player_slot < 6 ? match.radiant_win : !match.radiant_win;
 
                     // Drafts(4)
-                    await ProcessDraft(day, drafts, player, skills, result);
+                    //await ProcessDraft(day, drafts, player, skills, result);
 
                     // Combos(2)[x6]
-                    await ProcessCombos(day, combos, player, skills, result);
+                    //await ProcessCombos(day, combos, player, skills, result);
 
                     // Abilities(1)[X4]
-                    await ProcessAbilties(day, abilities, player, skills, result);
+                    //await ProcessAbilties(day, abilities, player, skills, result);
                 }
                 catch (Exception ex)
                 {

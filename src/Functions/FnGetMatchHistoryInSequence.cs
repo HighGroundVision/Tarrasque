@@ -60,8 +60,19 @@ namespace HGV.Tarrasque.Functions
 
                 foreach (var match in matches)
                 {
-                    var day = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(match.start_time).DayOfYear;
-                    var attr = new BlobAttribute($"hgv-matches/{day}/{match.game_mode:00}/{match.match_id}");
+                    // Duration Gruad
+                    if (match.duration < 900)
+                        return;
+
+                    // Player Gruad
+                    if (match.human_players != 10 || match.players.Count != 10)
+                        return;
+
+                    // Mode Gruad
+                    if (config.ActiveModes.Contains(match.game_mode) == false)
+                        continue;
+
+                    var attr = new BlobAttribute($"hgv-matches/{match.match_id}");
                     using (var writer = await binder.BindAsync<TextWriter>(attr))
                     {
                         serailizer.Serialize(writer, match);
