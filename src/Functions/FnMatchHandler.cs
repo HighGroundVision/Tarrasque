@@ -23,6 +23,8 @@ namespace HGV.Tarrasque.Functions
             [Queue("hgv-drafts")]ICollector<StatSnapshot> draftsQueue,
             [Queue("hgv-combos")]ICollector<StatSnapshot> combosQueue,
             [Queue("hgv-abilities")]ICollector<StatSnapshot> abilitiesQueue,
+            // Valid Abilities
+            [Blob("hgv-master/valid-abilities.json", System.IO.FileAccess.Read)]CloudBlockBlob abilitiesBlob,
             // Logger
             TraceWriter log)
         {
@@ -32,14 +34,17 @@ namespace HGV.Tarrasque.Functions
             var matchJson = await matchBlob.DownloadTextAsync();
             var match = JsonConvert.DeserializeObject<Match>(matchJson);
 
+            var abilitiesJson = await abilitiesBlob.DownloadTextAsync();
+            var abilities = JsonConvert.DeserializeObject<List<int>>(abilitiesJson);
+
             // Get Skills, Pairs, & Quads - Add Snapshot to Queues
-            ProcessMatch(log, draftsQueue, combosQueue, abilitiesQueue, match);
+            ProcessMatch(log, draftsQueue, combosQueue, abilitiesQueue, abilities, match);
 
             // Delete Match
             await matchBlob.DeleteAsync();
         }
 
-        private static void ProcessMatch(TraceWriter log, ICollector<StatSnapshot> draftsQueue, ICollector<StatSnapshot> combosQueue, ICollector<StatSnapshot> abilitiesQueue, Match match)
+        private static void ProcessMatch(TraceWriter log, ICollector<StatSnapshot> draftsQueue, ICollector<StatSnapshot> combosQueue, ICollector<StatSnapshot> abilitiesQueue, List<int> validAbilities, Match match)
         {
             try
             {
@@ -48,12 +53,19 @@ namespace HGV.Tarrasque.Functions
                     var upgrades = player.ability_upgrades
                            .Select(_ => _.ability)
                            .Distinct()
+                           .Intersect(validAbilities)
                            .OrderBy(_ => _)
                            .ToList();
 
-                    // Ability Gruad
+                    // Skill Count Warning
                     if (upgrades.Count < 4)
-                        continue;
+                    {
+                        log.Warning($"Fn-HandleADMatch({match.match_id}): hero({player.hero_id}) has < 4 abilties.");
+                    }
+                    else if (upgrades.Count > 4)
+                    {
+                        log.Warning($"Fn-HandleADMatch({match.match_id}): hero({player.hero_id}) has > 4 abilties.");
+                    }
 
                     //var result 
                     var snapshot = new StatSnapshot

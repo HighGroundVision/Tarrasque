@@ -12,43 +12,50 @@ namespace HGV.Tarrasque.Functions
 {
     public static class FnDraftsHandler
     {
+        const int GAMEMODE_AD = 18;
+
         [FunctionName("DraftsHandler")]
         public static async Task Run(
             // Queue {Name}
             [QueueTrigger("hgv-drafts")]StatSnapshot item,
             // Stats for the Draft (Pre Seeded)
             [Blob("hgv-stats/drafts/{Key}.json")]CloudBlockBlob matchBlob,
-            // Next for total matches
-            [Blob("hgv-master/next.json", System.IO.FileAccess.Read)]string nextJson,
+            // stats totals
+            [Blob("hgv-stats/totals.json", System.IO.FileAccess.ReadWrite)]TextReader totalsReader,
             // Logger
             TraceWriter log
         )
         {
             log.Info($"Fn-DraftsHandler({item.Key}): started at {DateTime.UtcNow}");
 
-            // Blob Gruad - Make sure Blob has been seeded
+            // Blob Gruad
             var result = await matchBlob.ExistsAsync();
             if (result == false)
             {
-                log.Warning($"Fn-DraftsHandler({item.Key}): No draft found matching the key.");
-                return;
+                // Make sure Blob has been created
+                await CreateIfNoneExists(log, item, matchBlob);
             }
 
-            // Get [Next] for total matches
-            var next = JsonConvert.DeserializeObject<Next>(nextJson);
-            var totalMatches = next.TotalMatches;
-            // TODO: move out into another file
+            var serailizer = JsonSerializer.CreateDefault();
+            var totals = (Totals)serailizer.Deserialize(totalsReader, typeof(Totals));
+            var totalMatches = totals.Modes[GAMEMODE_AD];
 
             // add the snapshot to the stats
             await ProcessSnapshot(log, matchBlob, item, totalMatches);
         }
 
+        private static async Task CreateIfNoneExists(TraceWriter log, StatSnapshot item, CloudBlockBlob matchBlob)
+        {
+            log.Warning($"Fn-DraftsHandler({item.Key}) No draft found; creating draft.");
+
+            var json = JsonConvert.SerializeObject(new AbilitiesStats());
+            await matchBlob.UploadTextAsync(json);
+        }
+
         private static async Task ProcessSnapshot(TraceWriter log, CloudBlockBlob matchBlob, StatSnapshot item, float totalMatches)
         {
-            string leaseId = String.Empty;
             try
             {
-                leaseId = await matchBlob.AcquireLeaseAsync(TimeSpan.FromSeconds(15));
                 var jsonDown = await matchBlob.DownloadTextAsync();
                 var stat = JsonConvert.DeserializeObject<AbilitiesStats>(jsonDown);
 
@@ -69,13 +76,6 @@ namespace HGV.Tarrasque.Functions
             catch (Exception ex)
             {
                 log.Error($"Fn-DraftsHandler({item.Key}): failed to update stats.", ex);
-            }
-            finally
-            {
-                if (string.IsNullOrEmpty(leaseId))
-                {
-                    await matchBlob.ReleaseLeaseAsync(AccessCondition.GenerateLeaseCondition(leaseId));
-                }
             }
         }
     }
