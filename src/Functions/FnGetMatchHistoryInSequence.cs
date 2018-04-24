@@ -42,7 +42,7 @@ namespace HGV.Tarrasque.Functions
                 return;
             }
 
-            log.Info($"Fn-GetMatchHistoryInSequence({next.MatchNumber}): started at {DateTime.UtcNow}");
+            //log.Info($"Fn-GetMatchHistoryInSequence({next.MatchNumber}): started at {DateTime.UtcNow}");
 
             // Seed [Next]
             await SeedNext(config, next, log);

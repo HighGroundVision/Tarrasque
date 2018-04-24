@@ -28,7 +28,7 @@ namespace HGV.Tarrasque.Functions
             // Logger
             TraceWriter log)
         {
-            log.Info($"Fn-HandleADMatch({id}): started at {DateTime.UtcNow}");
+            //log.Info($"Fn-HandleADMatch({id}): started at {DateTime.UtcNow}");
 
             // Get Match
             var matchJson = await matchBlob.DownloadTextAsync();

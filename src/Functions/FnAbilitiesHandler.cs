@@ -1,33 +1,32 @@
-using HGV.Tarrasque.Models;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using HGV.Tarrasque.Models;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Host;
+using Microsoft.WindowsAzure.Storage.Blob;
+using Newtonsoft.Json;
 
 namespace HGV.Tarrasque.Functions
 {
-    public static class FnDraftsHandler
+    public static class FnAbilitiesHandler
     {
         const int GAMEMODE_AD = 18;
 
         [StorageAccount("AzureWebJobsStorage")]
-        [FunctionName("DraftsHandler")]
+        [FunctionName("AbilitiesHandler")]
         public static async Task Run(
             // Queue {Name}
-            [QueueTrigger("hgv-drafts")]StatSnapshot item,
-            // Stats for the Draft
-            [Blob("hgv-stats/drafts/{Key}.json")]CloudBlockBlob statsBlob,
+            [QueueTrigger("hgv-abilities")]StatSnapshot item,
+            // Stats for the Draft (Pre Seeded)
+            [Blob("hgv-stats/abilities/{Key}.json")]CloudBlockBlob statsBlob,
             // stats totals
             [Blob("hgv-stats/totals.json", System.IO.FileAccess.ReadWrite)]CloudBlockBlob totalsBlob,
             // Logger
             TraceWriter log
         )
         {
-            //log.Info($"Fn-DraftsHandler({item.Key}): started at {DateTime.UtcNow}");
+            //log.Info($"Fn-AbilitiesHandler({item.Key}): started at {DateTime.UtcNow}");
 
             // Blob Gruad
             var result = await statsBlob.ExistsAsync();
@@ -49,14 +48,14 @@ namespace HGV.Tarrasque.Functions
         {
             try
             {
-                log.Warning($"Fn-DraftsHandler({item.Key}) No draft found; creating draft.");
+                log.Warning($"Fn-AbilitiesHandler({item.Key}) No ability found; creating ability.");
 
                 var json = JsonConvert.SerializeObject(new AbilitiesStats());
                 await matchBlob.UploadTextAsync(json);
             }
             catch (Exception ex)
             {
-                log.Error($"Fn-DraftsHandler({item.Key}): failed to create stats.", ex);
+                log.Error($"Fn-AbilitiesHandler({item.Key}): failed to create stats.", ex);
             }
         }
 
@@ -70,7 +69,7 @@ namespace HGV.Tarrasque.Functions
                 stat.Wins += item.Win ? 1 : 0;
                 stat.WinRate = stat.Wins / totalMatches;
                 stat.Picks++;
-                stat.PickRate = stat.Picks /totalMatches;
+                stat.PickRate = stat.Picks / totalMatches;
                 stat.Kills += item.Kills;
                 stat.Deaths += item.Deaths;
                 stat.Assists += item.Assists;
@@ -83,7 +82,7 @@ namespace HGV.Tarrasque.Functions
             }
             catch (Exception ex)
             {
-                log.Error($"Fn-DraftsHandler({item.Key}): failed to update stats.", ex);
+                log.Error($"Fn-AbilitiesHandler({item.Key}): failed to update stats.", ex);
             }
         }
     }
