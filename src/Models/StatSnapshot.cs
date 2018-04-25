@@ -6,7 +6,9 @@ namespace HGV.Tarrasque.Models
 {
     public struct StatSnapshot
     {
-        public string Key { get; set; }
+        public int Type { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
 
         public bool Win { get; set; }
         public int Kills { get; set; }
@@ -15,5 +17,7 @@ namespace HGV.Tarrasque.Models
         public int Damage { get; set; }         // Damage To Heroes
         public int Destruction { get; set; }    // Damage To Structures
         public int Gold { get; set; }
+
+        public int TotalMatches { get; set; }
     }
 }

@@ -25,8 +25,6 @@ namespace HGV.Tarrasque.Functions
             TraceWriter log
         )
         {
-            //log.Info($"Fn-RequestStats(): handing request at {DateTime.UtcNow}");
-
             var json = await totalsBlob.DownloadTextAsync();
             return new OkObjectResult(json);
         }

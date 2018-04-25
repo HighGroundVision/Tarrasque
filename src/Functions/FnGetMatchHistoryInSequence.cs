@@ -42,8 +42,6 @@ namespace HGV.Tarrasque.Functions
                 return;
             }
 
-            //log.Info($"Fn-GetMatchHistoryInSequence({next.MatchNumber}): started at {DateTime.UtcNow}");
-
             // Seed [Next]
             await SeedNext(config, next, log);
 
@@ -88,10 +86,6 @@ namespace HGV.Tarrasque.Functions
 
                         // Duration Gruad
                         if (match.duration < 900)
-                            return;
-
-                        // Player Gruad
-                        if (match.human_players != 10 || match.players.Count != 10)
                             return;
 
                         // Mode Gruad

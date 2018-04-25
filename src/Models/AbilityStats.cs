@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.WindowsAzure.Storage.Table;
 
 namespace HGV.Tarrasque.Models
 {
-    public class AbilitiesStats
+    public class AbilityStats : TableEntity
     {
-        public int Wins { get; set; }
-        public float WinRate { get; set; }
+        public int Type { get; set; }
 
+        public int Wins { get; set; }
         public int Picks { get; set; }
-        public float PickRate { get; set; }
 
         public int Kills { get; set; }
         public int Deaths { get; set; }
@@ -18,5 +15,9 @@ namespace HGV.Tarrasque.Models
         public int Damage { get; set; }         // Damage To Heroes
         public int Destruction { get; set; }    // Damage To Structures
         public int Gold { get; set; }
+
+        public double PickVsTotal { get; set; }
+        public double WinsVsTotal { get; set; }
+        public double WinsVsPicks { get; set; }
     }
 }
