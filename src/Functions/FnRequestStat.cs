@@ -10,6 +10,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 using HGV.Tarrasque.Models;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace HGV.Tarrasque.Functions
 {
@@ -20,6 +21,8 @@ namespace HGV.Tarrasque.Functions
         public static async Task<IActionResult> Run(
             // Request
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)]HttpRequest req,
+            // Stats totals
+            [Blob("hgv-stats/totals.json", System.IO.FileAccess.ReadWrite)] CloudBlockBlob totalsBlob,
             // Abilities table 
             [Table("HGVStatsAbilities")]CloudTable statsTables,
             // Logger
@@ -28,47 +31,53 @@ namespace HGV.Tarrasque.Functions
         {
             string key = req.Query["key"];
 
+            // QueryString Gruad
             if (string.IsNullOrWhiteSpace(key))
                 return new BadRequestObjectResult("Key is required");
 
+            // Get Totals
+            var jsonTotals = await totalsBlob.DownloadTextAsync();
+            var totals = JsonConvert.DeserializeObject<Totals>(jsonTotals);
+            var totalMatches = totals.Modes[(int)GameMode.ability_draft];
+
+            // Get Range
             var operation = TableOperation.Retrieve<AbilityStats>("Range", key);
             var result = await statsTables.ExecuteAsync(operation);
             var range = result.Result as AbilityStats;
 
+            // Get Melee
             operation = TableOperation.Retrieve<AbilityStats>("Melee", key);
             result = await statsTables.ExecuteAsync(operation);
             var melee = result.Result as AbilityStats;
 
+            // Convert to Stats Summaries
             var root = new StatsDetail();
             root.Abilities = key.Split('-').Select(_ => int.Parse(_)).ToList();
-            root.Melee = ConvertStatToSummary(melee);
-            root.Range = ConvertStatToSummary(range);
+            root.Melee = ConvertStatToSummary(melee, totalMatches);
+            root.Range = ConvertStatToSummary(range, totalMatches);
 
+            // Return reponse
             return new OkObjectResult(root);
         }
 
-        private static AbilitySummary ConvertStatToSummary(AbilityStats table)
+        private static AbilitySummary ConvertStatToSummary(AbilityStats table, float totalMatches)
         {
-            if (table == null)
+            if (table == null) return null;
+
+            return new AbilitySummary
             {
-                return null;
-            }
-            else
-            {
-                var temp = new AbilitySummary();
-                temp.Wins = table.Wins;
-                temp.Picks = table.Picks;
-                temp.Kills = table.Kills;
-                temp.Deaths = table.Deaths;
-                temp.Assists = table.Assists;
-                temp.Damage = table.Damage;
-                temp.Destruction = table.Destruction;
-                temp.Gold = table.Gold;
-                temp.PickVsTotal = table.PickVsTotal;
-                temp.WinsVsTotal = table.WinsVsTotal;
-                temp.WinsVsPicks = table.WinsVsPicks;
-                return temp;
-            }
+                Wins = table.Wins,
+                Picks = table.Picks,
+                Kills = table.Kills,
+                Deaths = table.Deaths,
+                Assists = table.Assists,
+                Damage = table.Damage,
+                Destruction = table.Destruction,
+                Gold = table.Gold,
+                PickVsTotal = table.Picks / totalMatches,
+                WinsVsTotal = table.Wins / totalMatches,
+                WinsVsPicks = table.Wins / table.Picks
+            };
         }
     }
 }

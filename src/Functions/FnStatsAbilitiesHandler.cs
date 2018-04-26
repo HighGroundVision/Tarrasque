@@ -47,9 +47,6 @@ namespace HGV.Tarrasque.Functions
             entity.Destruction += snapshot.Destruction;
             entity.Damage += snapshot.Damage;
             entity.Gold += snapshot.Gold;
-            entity.PickVsTotal = entity.Picks / (float)snapshot.TotalMatches;
-            entity.WinsVsTotal = entity.Wins / (float)snapshot.TotalMatches;
-            entity.WinsVsPicks = entity.Wins / (float)entity.Picks;
 
             // Insert or Replace table item
             operation = TableOperation.InsertOrReplace(entity);

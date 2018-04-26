@@ -28,9 +28,7 @@ namespace HGV.Tarrasque.Functions
             // Process only matches for AD Matches
             [BlobTrigger("hgv-matches/{id}.json")]CloudBlockBlob matchBlob, long id,
             // Output Queues - Singles, Pairs
-            [Queue("hgv-stats-abilities")]ICollector<StatSnapshot> statsQueue,
-            // Stats totals
-            [Blob("hgv-stats/totals.json", System.IO.FileAccess.ReadWrite)]CloudBlockBlob totalsBlob,
+            [Queue("hgv-stats-abilities")]ICollector<StatSnapshot> statsQueue,          
             // List of valid Abilities
             [Blob("hgv-master/valid-abilities.json", System.IO.FileAccess.Read)]CloudBlockBlob abilitiesBlob,
             // List melee Heroes
@@ -48,13 +46,8 @@ namespace HGV.Tarrasque.Functions
             var heroesJson = await heroesBlob.DownloadTextAsync();
             var heroesMelee = JsonConvert.DeserializeObject<List<int>>(heroesJson);
 
-            // Get Totals
-            var jsonTotals = await totalsBlob.DownloadTextAsync();
-            var totals = JsonConvert.DeserializeObject<Totals>(jsonTotals);
-            var totalMatches = totals.Modes[(int)GameMode.ability_draft];
-
             // Get Skills, Pairs, & Quads - Add Snapshot to Queues
-            ProcessMatch(log, statsQueue, validAbilities, heroesMelee, totalMatches, match);
+            ProcessMatch(log, statsQueue, validAbilities, heroesMelee, match);
 
             // Delete Match
             await matchBlob.DeleteAsync();
@@ -63,7 +56,6 @@ namespace HGV.Tarrasque.Functions
         private static void ProcessMatch(TraceWriter log, 
             ICollector<StatSnapshot> statsQueue, 
             List<int> validAbilities, List<int> heroesMelee,
-            int totalMatches,
             Match match)
         {
             try
@@ -100,8 +92,7 @@ namespace HGV.Tarrasque.Functions
                         Assists = player.assists,
                         Damage = player.hero_damage,
                         Destruction = player.tower_damage,
-                        Gold = player.gold,
-                        TotalMatches = totalMatches
+                        Gold = player.gold
                     };
 
                     CreatePairs(statsQueue, upgrades, snapshot);

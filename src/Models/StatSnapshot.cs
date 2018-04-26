@@ -17,7 +17,5 @@ namespace HGV.Tarrasque.Models
         public int Damage { get; set; }         // Damage To Heroes
         public int Destruction { get; set; }    // Damage To Structures
         public int Gold { get; set; }
-
-        public int TotalMatches { get; set; }
     }
 }
