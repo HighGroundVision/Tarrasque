@@ -17,7 +17,9 @@ namespace HGV.Tarrasque.Models
         public int Gold { get; set; }
 
         public double PickRate { get; set; }
-        public double WinsRate { get; set; }
+        public double WinRate { get; set; }
+
+        public int Total { get; set; }
     }
 
     public class StatsDetail

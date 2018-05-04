@@ -60,7 +60,7 @@ namespace HGV.Tarrasque.Functions
             return new OkObjectResult(root);
         }
 
-        private static AbilitySummary ConvertStatToSummary(AbilityStats table, float totalMatches)
+        private static AbilitySummary ConvertStatToSummary(AbilityStats table, int totalMatches)
         {
             if (table == null) return null;
 
@@ -74,8 +74,9 @@ namespace HGV.Tarrasque.Functions
                 Damage = table.Damage,
                 Destruction = table.Destruction,
                 Gold = table.Gold,
-                PickRate = table.Picks / totalMatches,
-                WinsRate = table.Wins / (float)table.Picks
+                PickRate = table.Picks / (float)totalMatches,
+                WinRate = table.Wins / (float)table.Picks,
+                Total = totalMatches
             };
         }
     }
