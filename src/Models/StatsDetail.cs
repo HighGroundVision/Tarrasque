@@ -16,9 +16,8 @@ namespace HGV.Tarrasque.Models
         public int Destruction { get; set; }    // Damage To Structures
         public int Gold { get; set; }
 
-        public double PickVsTotal { get; set; }
-        public double WinsVsTotal { get; set; }
-        public double WinsVsPicks { get; set; }
+        public double PickRate { get; set; }
+        public double WinsRate { get; set; }
     }
 
     public class StatsDetail

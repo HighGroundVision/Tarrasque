@@ -74,9 +74,8 @@ namespace HGV.Tarrasque.Functions
                 Damage = table.Damage,
                 Destruction = table.Destruction,
                 Gold = table.Gold,
-                PickVsTotal = table.Picks / totalMatches,
-                WinsVsTotal = table.Wins / totalMatches,
-                WinsVsPicks = table.Wins / table.Picks
+                PickRate = table.Picks / totalMatches,
+                WinsRate = table.Wins / (float)table.Picks
             };
         }
     }
