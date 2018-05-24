@@ -23,12 +23,19 @@ namespace HGV.Tarrasque.Functions
 
             string matchQuery = req.Query["match"].ToString();
             if (string.IsNullOrWhiteSpace(matchQuery))
+            {
                 return new BadRequestObjectResult("Please pass a [match] id on the query string");
+            }
 
             var matchId = long.Parse(matchQuery);
 
             var client = new HGV.Daedalus.DotaApiClient("BD0FBFBE762E542E3090A90D3C6D8E56");
             var match = await client.GetMatchDetails(matchId);
+
+            if(match.game_mode != 18)
+            {
+                return new BadRequestObjectResult("Please pass a [match] id of an Ability Draft game");
+            }
 
             var data = new List<PlayersAbilities>();
             foreach (var player in match.players)
