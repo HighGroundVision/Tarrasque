@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using Microsoft.Net.Http.Headers;
+using System.Linq;
+using HGV.Tarrasque.Utilities;
 
 namespace HGV.Tarrasque.Functions
 {
@@ -23,10 +26,14 @@ namespace HGV.Tarrasque.Functions
 
             var matchId = long.Parse(matchQuery);
 
+            var etag = new EntityTagHeaderValue($"\"{matchId}\"");
+            if(ETagTest.Compare(req, etag))
+                return new StatusCodeResult((int)System.Net.HttpStatusCode.NotModified);
+
             var client = new HGV.Daedalus.DotaApiClient("BD0FBFBE762E542E3090A90D3C6D8E56");
             var match = await client.GetMatchDetails(matchId);
 
-            return new OkObjectResult(match);
+            return new EtagOkObjectResult(match) { ETag = etag };
         }
     }
 }
