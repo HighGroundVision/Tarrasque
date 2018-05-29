@@ -15,6 +15,8 @@ namespace HGV.Tarrasque.Functions
 {
     public static class FnMatchDetails
     {
+        private static string APIKEY = "4932A809199A74AB6833EDFD9BADC176";
+
         [FunctionName("MatchDetails")]
         public async static Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)]HttpRequest req, TraceWriter log)
         {
@@ -30,7 +32,7 @@ namespace HGV.Tarrasque.Functions
             if(ETagTest.Compare(req, etag))
                 return new StatusCodeResult((int)System.Net.HttpStatusCode.NotModified);
 
-            var client = new HGV.Daedalus.DotaApiClient("BD0FBFBE762E542E3090A90D3C6D8E56");
+            var client = new HGV.Daedalus.DotaApiClient(APIKEY);
             var match = await client.GetMatchDetails(matchId);
 
             return new EtagOkObjectResult(match) { ETag = etag };
