@@ -8,11 +8,14 @@ using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using HGV.Tarrasque.Models;
+using HGV.Daedalus;
 
 namespace HGV.Tarrasque.Functions
 {
     public static class FnPlayerSummary
     {
+        private static readonly DotaApiClient client = new DotaApiClient("4932A809199A74AB6833EDFD9BADC176");
+
         [FunctionName("PlayerSummary")]
         public async static Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)]HttpRequest req, TraceWriter log)
         {
@@ -22,7 +25,6 @@ namespace HGV.Tarrasque.Functions
 
             var steamId = long.Parse(identity);
 
-            var client = new HGV.Daedalus.DotaApiClient("BD0FBFBE762E542E3090A90D3C6D8E56");
             var player = await client.GetPlayerSummaries(steamId);
 
             var data = new ProfileData();
