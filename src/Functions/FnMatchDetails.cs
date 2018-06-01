@@ -27,20 +27,7 @@ namespace HGV.Tarrasque.Functions
 
             var matchId = long.Parse(matchQuery);
 
-            /*
-            var etag = new EntityTagHeaderValue($"\"{matchId}\"");
-            if(ETagTest.Compare(req, etag))
-                return new StatusCodeResult((int)System.Net.HttpStatusCode.NotModified);
-            */
-
             var json = await httpClient.GetStringAsync($"https://api.opendota.com/api/matches/{matchId}");
-
-            if (json.Contains("\"version\":null"))
-            {
-                var reponse = await httpClient.PostAsync($"https://api.opendota.com/api/request/{matchId}", new MultipartContent());
-                var test = reponse.Content.ReadAsStringAsync();
-            }
-            
 
             return new OkObjectResult(json);
         }
