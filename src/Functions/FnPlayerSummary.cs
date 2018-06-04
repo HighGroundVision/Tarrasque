@@ -9,12 +9,13 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using HGV.Tarrasque.Models;
 using HGV.Daedalus;
+using HGV.Tarrasque.Utilities;
 
 namespace HGV.Tarrasque.Functions
 {
     public static class FnPlayerSummary
     {
-        private static readonly DotaApiClient client = new DotaApiClient("4932A809199A74AB6833EDFD9BADC176");
+        private static readonly DotaApiClient client = new DotaApiClient(AzureApplicationSettings.GetSettings("STEAMAPIKEY"));
 
         [FunctionName("PlayerSummary")]
         public async static Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)]HttpRequest req, TraceWriter log)
