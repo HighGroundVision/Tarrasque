@@ -42,7 +42,7 @@ namespace HGV.Tarrasque.Functions
             var blob = container.GetBlockBlobReference($"{gameMode}/{accountId}.json");
             var result = await blob.ExistsAsync();
             if (result == false)
-                return new NotFoundResult();
+                return new OkObjectResult(new List<RecentMatch>());
 
             var json = await blob.DownloadTextAsync();
             var matches = JsonConvert.DeserializeObject<List<RecentMatch>>(json);
