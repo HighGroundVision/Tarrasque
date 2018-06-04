@@ -33,8 +33,9 @@ namespace HGV.Tarrasque.Functions
 
             var accountId = long.Parse(accountQuery);
             var gameMode = int.Parse(modeQuery);
+            var timestamp = DateTime.UtcNow.ToString("yyMMddHH");
 
-            var etag = new EntityTagHeaderValue($"\"{accountId}{DateTime.UtcNow.ToString("yyMMdd")}\"");
+            var etag = new EntityTagHeaderValue($"\"{gameMode}|{accountId}|{timestamp}\"");
             if (ETagTest.Compare(req, etag))
                 return new NotModifiedResult();
 

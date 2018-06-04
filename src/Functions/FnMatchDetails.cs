@@ -11,6 +11,7 @@ using Microsoft.Net.Http.Headers;
 using System.Linq;
 using HGV.Tarrasque.Utilities;
 using System.Net.Http;
+using System;
 
 namespace HGV.Tarrasque.Functions
 {
@@ -26,10 +27,15 @@ namespace HGV.Tarrasque.Functions
                 return new BadRequestObjectResult("Please pass a [match] id on the query string");
 
             var matchId = long.Parse(matchQuery);
+            var timestamp = DateTime.UtcNow.ToString("yyMMdd");
+
+            var etag = new EntityTagHeaderValue($"\"{matchId}|{timestamp}\"");
+            if (ETagTest.Compare(req, etag))
+                return new NotModifiedResult();
 
             var json = await httpClient.GetStringAsync($"https://api.opendota.com/api/matches/{matchId}");
 
-            return new OkObjectResult(json);
+            return new EtagOkObjectResult(json) { ETag = etag };
         }
     }
 }
