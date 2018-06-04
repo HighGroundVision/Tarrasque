@@ -26,38 +26,50 @@ namespace HGV.Tarrasque.Functions
             TraceWriter log
         )
         {
-            var task = Task.Run(async () => { await GetMatchHistory(log, msg, blob); });
-            var result = task.Wait(TimeSpan.FromMinutes(5));
-            if (!result)
+            try
             {
-                throw new TimeoutException($"RefreshAccounts(): account[{msg.dota_id}] failed to complete! Trying Again...");
+                var task = Task.Run(async () => { await GetMatchHistory(log, msg, blob); });
+                var result = task.Wait(TimeSpan.FromMinutes(30));
+                if (!result)
+                {
+                    throw new TimeoutException($"RefreshAccounts(): account[{msg.dota_id}] failed to complete! Trying Again...");
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error(ex.Message, ex);
             }
         }
 
         private static async Task GetMatchHistory(TraceWriter log, AccountRefreshMessage msg, CloudBlockBlob blob)
         {
+            const int LIMIT = 3;
+
             var collection = new List<RecentMatch>();
 
             var history = await client.GetMatchHistory(msg.dota_id);
-            var count = 0;
-
-            foreach (var item in history)
+            for (int i = 0; i < history.Count; i++)
             {
-                count++;
-                // log.Info($"RefreshAccounts(): Processing match[{count}]");
+                var item = history[i];
 
-                while (await TryFetchMatchDetails(client, msg, item.match_id, collection)) { }
+                for (int z = 1; z <= LIMIT; z++)
+                {
+                    log.Info($"RefreshAccounts({msg.dota_id}): # {i}; attempt {z} of {LIMIT}");
+
+                    var result = await TryFetchMatchDetails(msg, item.match_id, collection);
+                    if (result)
+                        break;
+                }
             }
 
             var jsonUpload = JsonConvert.SerializeObject(collection);
             await blob.UploadTextAsync(jsonUpload);
         }
 
-        private static async Task<bool> TryFetchMatchDetails(DotaApiClient client, AccountRefreshMessage msg, long match_id, List<RecentMatch> collection)
+        private static async Task<bool> TryFetchMatchDetails(AccountRefreshMessage msg, long match_id, List<RecentMatch> collection)
         {
             try
             {
-
                 await Task.Delay(TimeSpan.FromSeconds(1));
 
                 var match = await client.GetMatchDetails(match_id);
@@ -88,13 +100,13 @@ namespace HGV.Tarrasque.Functions
                     collection.Add(recent);
                 }
 
-                return false;
+                return true;
             }
             catch (Exception)
             {
                 await Task.Delay(TimeSpan.FromSeconds(30));
 
-                return true;
+                return false;
             }
         }
     }

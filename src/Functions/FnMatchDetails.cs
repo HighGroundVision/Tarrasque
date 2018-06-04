@@ -27,7 +27,7 @@ namespace HGV.Tarrasque.Functions
                 return new BadRequestObjectResult("Please pass a [match] id on the query string");
 
             var matchId = long.Parse(matchQuery);
-            var timestamp = DateTime.UtcNow.ToString("yyMMdd");
+            var timestamp = DateTime.UtcNow.ToString("yyMMddHH");
 
             var etag = new EntityTagHeaderValue($"\"{matchId}|{timestamp}\"");
             if (ETagTest.Compare(req, etag))
