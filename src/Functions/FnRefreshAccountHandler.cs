@@ -27,18 +27,11 @@ namespace HGV.Tarrasque.Functions
             TraceWriter log
         )
         {
-            try
+            var task = Task.Run(async () => { await GetMatchHistory(log, msg, blob); });
+            var result = task.Wait(TimeSpan.FromMinutes(15));
+            if (!result)
             {
-                var task = Task.Run(async () => { await GetMatchHistory(log, msg, blob); });
-                var result = task.Wait(TimeSpan.FromMinutes(30));
-                if (!result)
-                {
-                    throw new TimeoutException($"RefreshAccounts(): account[{msg.dota_id}] failed to complete! Trying Again...");
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error(ex.Message, ex);
+                log.Error($"RefreshAccounts(): account[{msg.dota_id}] failed to complete with in the 15 minutes limit");
             }
         }
 
