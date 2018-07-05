@@ -21,18 +21,13 @@ namespace HGV.Tarrasque.Functions
             TraceWriter log
         )
         {
-            var josn = await blob.DownloadTextAsync();
-            return new OkObjectResult(josn);
-
-            /*
-            var timestamp = DateTime.UtcNow.ToString("yyMMddHH");
+            var timestamp = DateTime.UtcNow.ToString("yyMMddHHmm");
             var etag = new EntityTagHeaderValue($"\"{timestamp}\"");
             if (ETagTest.Compare(req, etag))
                 return new NotModifiedResult();
 
             var josn = await blob.DownloadTextAsync();
             return new EtagOkObjectResult(josn) { ETag = etag };
-            */
         }
     }
 }
