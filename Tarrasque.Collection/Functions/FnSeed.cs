@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace Tarrasque.Collection.Functions
+namespace HGV.Tarrasque.Collection.Functions
 {
     public class FnSeed
     {
