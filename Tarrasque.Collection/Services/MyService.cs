@@ -31,22 +31,26 @@ namespace HGV.Tarrasque.Collection
 
             var model = new Models.Checkpoint()
             {
+                Timestamp = DateTime.UtcNow,
+                Latest = history.Max(),
                 History = history,
                 Counter = 1,
             };
 
-            var json = JsonConvert.SerializeObject(model);
-            await writer.WriteAsync(json);
+            var output = JsonConvert.SerializeObject(model);
+            await writer.WriteAsync(output);
         }
 
         public async Task CollectMatches(TextReader reader, TextWriter writer)
         {
-            var json = await reader.ReadToEndAsync();
+            var input = await reader.ReadToEndAsync();
+            var model = JsonConvert.DeserializeObject<Models.Checkpoint>(input);
 
+            model.Timestamp = DateTime.UtcNow;
+            model.Counter++;
 
-            await writer.WriteAsync(json);
-
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            var output = JsonConvert.SerializeObject(model);
+            await writer.WriteAsync(output);
         }
     }
 }

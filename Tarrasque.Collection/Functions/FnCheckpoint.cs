@@ -24,8 +24,6 @@ namespace HGV.Tarrasque.Collection.Functions
             ILogger log)
         {
             await _service.CollectMatches(reader, writer);
-
-            log.LogInformation($"Checkpoint");
         }
     }
 }

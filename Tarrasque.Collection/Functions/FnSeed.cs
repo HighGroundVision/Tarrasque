@@ -25,8 +25,6 @@ namespace HGV.Tarrasque.Collection.Functions
             [Blob("hgv-checkpoint/master.json")]TextWriter writer,
             ILogger log)
         {
-            //log.LogInformation("C# HTTP trigger function processed a request.");
-
             await _service.Seed(writer);
 
             return new OkResult();
