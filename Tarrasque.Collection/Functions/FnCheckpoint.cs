@@ -6,7 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 
-namespace Tarrasque.Collection
+namespace Tarrasque.Collection.Functions
 {
     public class FnCheckpoint
     {
@@ -19,11 +19,11 @@ namespace Tarrasque.Collection
 
         [FunctionName("FnCheckpoint")]
         public async Task Checkpoint(
-            [BlobTrigger("checkpoint/master.json")]TextReader reader, 
-            [Blob("checkpoint/master.json", FileAccess.Write)]TextWriter writer, 
+            [BlobTrigger("hgv-checkpoint/master.json")]TextReader reader, 
+            [Blob("hgv-checkpoint/master.json", FileAccess.Write)]TextWriter writer, 
             ILogger log)
         {
-            await _service.DoStuffAsync(reader, writer);
+            await _service.CollectMatches(reader, writer);
 
             log.LogInformation($"Checkpoint");
         }
