@@ -27,29 +27,43 @@ namespace HGV.Tarrasque.Collection
         public async Task Seed(TextWriter writer)
         {
             var matches = await this.client.GetLastestMatches();
+
+            var checkpoint = new Models.Checkpoint();
+
+            var min = matches.Min(_ => _.start_time);
+            var max = matches.Max(_ => _.start_time);
+            checkpoint.Timestamp.SetRange(min, max);
+            checkpoint.Timestamp.ToLocal();
+
             var history = matches.Select(_ => _.match_seq_num).ToList();
+            checkpoint.Latest = history.Max();
+            checkpoint.History.AddRange(history);
 
-            var model = new Models.Checkpoint()
-            {
-                Timestamp = DateTime.UtcNow,
-                Latest = history.Max(),
-                History = history,
-                Counter = 1,
-            };
-
-            var output = JsonConvert.SerializeObject(model);
+            var output = JsonConvert.SerializeObject(checkpoint);
             await writer.WriteAsync(output);
         }
 
         public async Task CollectMatches(TextReader reader, TextWriter writer)
         {
             var input = await reader.ReadToEndAsync();
-            var model = JsonConvert.DeserializeObject<Models.Checkpoint>(input);
+            var checkpoint = JsonConvert.DeserializeObject<Models.Checkpoint>(input);
 
-            model.Timestamp = DateTime.UtcNow;
-            model.Counter++;
+            var matches = await this.client.GetMatchesInSequence(checkpoint.Latest);
+            
+            foreach (var match in matches)
+            {
+                if(checkpoint.History.Contains(match.match_seq_num))
+                    continue;
+            }
 
-            var output = JsonConvert.SerializeObject(model);
+            checkpoint.Latest = checkpoint.History.Max();
+
+            var min = matches.Min(_ => _.start_time);
+            var max = matches.Max(_ => _.start_time);
+            checkpoint.Timestamp.SetRange(min, max);
+            checkpoint.Timestamp.ToLocal();
+
+            var output = JsonConvert.SerializeObject(checkpoint);
             await writer.WriteAsync(output);
         }
     }
