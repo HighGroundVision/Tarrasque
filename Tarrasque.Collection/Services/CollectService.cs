@@ -1,8 +1,11 @@
 ﻿using HGV.Daedalus;
+using HGV.Daedalus.GetMatchDetails;
+using HGV.Tarrasque.Collection.Extensions;
 using HGV.Tarrasque.Collection.Models;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Polly;
+using Polly.CircuitBreaker;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +16,8 @@ namespace HGV.Tarrasque.Collection.Services
 {
     public interface ICollectService
     {    
-        Task Collect(TextReader reader, TextWriter writer, IAsyncCollector<Models.Match> queue, ILogger log);
+        Task Collect(TextReader reader, TextWriter writer, IAsyncCollector<MatchReference> queue);
+        Task CopyCheckpointForward(TextReader reader, TextWriter writer);
     }
 
     public class CollectService : ICollectService
@@ -25,39 +29,72 @@ namespace HGV.Tarrasque.Collection.Services
             this.client = client;
         }
 
-        public async Task Collect(TextReader reader, TextWriter writer, IAsyncCollector<Models.Match> queue, ILogger log)
+        public async Task Collect(TextReader reader, TextWriter writer, IAsyncCollector<MatchReference> queue)
         {
             var input = await reader.ReadToEndAsync();
             var checkpoint = JsonConvert.DeserializeObject<Models.Checkpoint>(input);
 
-            // Error Trap - Polly
-            var matches = await this.client.GetMatchesInSequence(checkpoint.Latest);
-            checkpoint.Latest = matches.Max(_ => _.match_seq_num);
-
-            var min = matches.Min(_ => _.start_time);
-            var max = matches.Max(_ => _.start_time);
-            checkpoint.Timestamp.SetRange(min, max);
-            checkpoint.Timestamp.ToLocal();
+            var matches = await TryGetMatches(checkpoint.Latest);
 
             var collection = matches
                 .Where(_ => _.game_mode == 18)
-                .Where(_ => DateTimeOffset.FromUnixTimeSeconds(_.duration).TimeOfDay.TotalMinutes > 15)
+                .Where(_ => _.GetDuration().TotalMinutes > 15)
                 .Select(_ => _.match_id)
                 .ToList();
 
+            checkpoint.Split = DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd());
+            checkpoint.Latest = matches.Max(_ => _.match_seq_num);
+            checkpoint.TotalMatches += matches.Count();
+            checkpoint.TotalADMatches += collection.Count();
+
             foreach (var id in collection)
             {
-                if(checkpoint.History.Contains(id) == false)
+                if (checkpoint.History.Contains(id) == false)
                 {
                     checkpoint.AddHistory(id);
 
-                    var item = new Models.Match() { Id = id };
+                    var item = new MatchReference() { Id = id };
                     await queue.AddAsync(item);
                 }
             }
 
             var output = JsonConvert.SerializeObject(checkpoint);
             await writer.WriteAsync(output);
+        }
+
+        public async Task CopyCheckpointForward(TextReader reader, TextWriter writer)
+        {
+            var json = await reader.ReadToEndAsync();
+            await writer.WriteAsync(json);
+        }
+
+        private async Task<List<Match>> TryGetMatches(long latest)
+        {
+            // NOTE: Exception filtering!  We don't retry if the inner circuit-breaker judges the underlying system is out of commission!
+            var waitAndRetryPolicy = Policy
+               .Handle<Exception>(e => !(e is BrokenCircuitException))
+               .WaitAndRetryForeverAsync(attempt => TimeSpan.FromMilliseconds(200));
+
+            var circuitBreakerPolicy = Policy
+                .Handle<Exception>()
+                .CircuitBreakerAsync(
+                    exceptionsAllowedBeforeBreaking: 2,
+                    durationOfBreak: TimeSpan.FromSeconds(30)
+                );
+
+            var policy = Policy.WrapAsync(waitAndRetryPolicy, circuitBreakerPolicy);
+
+            var collection = await policy.ExecuteAsync<List<Match>>(async () =>
+            {
+                var matches = await this.client.GetMatchesInSequence(latest);
+
+                if (matches.Count == 0)
+                    throw new ApplicationException("No Matches Returned from API");
+
+                return matches;
+            });
+
+            return collection;
         }
     }
 }

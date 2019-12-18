@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HGV.Tarrasque.Collection.Models
 {
-    public class Match
+    public class MatchReference
     {
         public long Id { get; set; }
     }

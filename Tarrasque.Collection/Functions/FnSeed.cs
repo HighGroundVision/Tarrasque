@@ -26,8 +26,18 @@ namespace HGV.Tarrasque.Collection.Functions
             [Blob("hgv-checkpoint/master.json")]TextWriter writer,
             ILogger log)
         {
-            await _service.Seed(writer, log);
-            return new OkResult();
+            try
+            {
+                await _service.Seed(writer);
+
+                return new OkResult();
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+
+                return new StatusCodeResult(500);
+            }
         }
     }
 }

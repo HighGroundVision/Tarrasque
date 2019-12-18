@@ -1,18 +1,17 @@
 ﻿using HGV.Daedalus;
-using Microsoft.Extensions.Logging;
+using HGV.Tarrasque.Collection.Models;
+using HGV.Tarrasque.Collection.Extensions;
 using Newtonsoft.Json;
 using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.Collection.Services
 {
     public interface ISeedService
     {
-        Task Seed(TextWriter writer, ILogger log);
+        Task Seed(TextWriter writer);
     }
 
     public class SeedService : ISeedService
@@ -24,7 +23,7 @@ namespace HGV.Tarrasque.Collection.Services
             this.client = client;
         }
 
-        public async Task Seed(TextWriter writer, ILogger log)
+        public async Task Seed(TextWriter writer)
         {
             var checkpoint = new Models.Checkpoint();
 
