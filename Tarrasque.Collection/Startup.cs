@@ -1,5 +1,6 @@
 ﻿using System;
 using HGV.Daedalus;
+using HGV.Tarrasque.Collection.Services;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,7 +16,8 @@ namespace HGV.Tarrasque.Collection
 
             builder.Services.AddSingleton<ISteamKeyProvider, SteamKeyProvider>();
             builder.Services.AddSingleton<IDotaApiClient, DotaApiClient>();
-            builder.Services.AddSingleton<IMyService, MyService>();
+            builder.Services.AddSingleton<ICollectService, CollectService>();
+            builder.Services.AddSingleton<ISeedService, SeedService>();
         }
     }
 }

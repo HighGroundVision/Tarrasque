@@ -7,14 +7,15 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using HGV.Tarrasque.Collection.Services;
 
 namespace HGV.Tarrasque.Collection.Functions
 {
     public class FnSeed
     {
-        private readonly IMyService _service;
+        private readonly ISeedService _service;
 
-        public FnSeed(IMyService service)
+        public FnSeed(ISeedService service)
         {
             _service = service;
         }
@@ -25,8 +26,7 @@ namespace HGV.Tarrasque.Collection.Functions
             [Blob("hgv-checkpoint/master.json")]TextWriter writer,
             ILogger log)
         {
-            await _service.Seed(writer);
-
+            await _service.Seed(writer, log);
             return new OkResult();
         }
     }
