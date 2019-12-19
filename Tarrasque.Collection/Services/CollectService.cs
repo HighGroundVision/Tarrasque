@@ -1,4 +1,5 @@
-﻿using HGV.Daedalus;
+﻿using HGV.Basilius;
+using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Collection.Extensions;
 using HGV.Tarrasque.Collection.Models;
@@ -22,11 +23,13 @@ namespace HGV.Tarrasque.Collection.Services
 
     public class CollectService : ICollectService
     {
-        private readonly IDotaApiClient client;
+        private readonly IDotaApiClient apiClient;
+        private readonly MetaClient metaClient;
 
         public CollectService(IDotaApiClient client)
         {
-            this.client = client;
+            this.apiClient = client;
+            this.metaClient = new MetaClient();
         }
 
         public async Task Collect(TextReader reader, TextWriter writer, IAsyncCollector<MatchReference> queue)
@@ -39,7 +42,6 @@ namespace HGV.Tarrasque.Collection.Services
             var collection = matches
                 .Where(_ => _.game_mode == 18)
                 .Where(_ => _.GetDuration().TotalMinutes > 15)
-                .Select(_ => _.match_id)
                 .ToList();
 
             checkpoint.Split = DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd());
@@ -47,14 +49,18 @@ namespace HGV.Tarrasque.Collection.Services
             checkpoint.TotalMatches += matches.Count();
             checkpoint.TotalADMatches += collection.Count();
 
-            foreach (var id in collection)
+            foreach (var item in collection)
             {
-                if (checkpoint.History.Contains(id) == false)
+                if (checkpoint.History.Contains(item.match_id) == false)
                 {
-                    checkpoint.AddHistory(id);
-
-                    var item = new MatchReference() { Id = id };
-                    await queue.AddAsync(item);
+                    checkpoint.AddHistory(item.match_id);
+                    
+                    var obj = new MatchReference() { 
+                        Match = item.match_id, 
+                        Date = item.GetStart().ToString("yy-MM-dd"),
+                        Region = this.metaClient.ConvertClusterToRegion(item.cluster)
+                    };
+                    await queue.AddAsync(obj);
                 }
             }
 
@@ -86,7 +92,7 @@ namespace HGV.Tarrasque.Collection.Services
 
             var collection = await policy.ExecuteAsync<List<Match>>(async () =>
             {
-                var matches = await this.client.GetMatchesInSequence(latest);
+                var matches = await this.apiClient.GetMatchesInSequence(latest);
 
                 if (matches.Count == 0)
                     throw new ApplicationException("No Matches Returned from API");

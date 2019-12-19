@@ -18,7 +18,7 @@ namespace HGV.Tarrasque.Collection
             builder.Services.AddSingleton<IDotaApiClient, DotaApiClient>();
             builder.Services.AddSingleton<ICollectService, CollectService>();
             builder.Services.AddSingleton<ISeedService, SeedService>();
-            builder.Services.AddSingleton<IProcessService, ProcessService>();
+            builder.Services.AddSingleton<IProcessMatchService, ProcessMatchService>();
         }
     }
 }

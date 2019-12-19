@@ -4,12 +4,9 @@ using System.Text;
 
 namespace HGV.Tarrasque.Collection.Models
 {
-    public class MatchReference
+    public class AccountReference
     {
+        public long Account { get; set; }
         public long Match { get; set; }
-
-        public string Date { get; set; }
-
-        public int Region { get; set; }
     }
 }
