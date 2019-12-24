@@ -11,7 +11,8 @@ namespace HGV.Tarrasque.Collection.Services
 {
     public interface ISeedService
     {
-        Task Seed(TextWriter writer);
+        Task SeedCheckpoint(TextWriter writer);
+        Task SeedHistory(TextWriter writer);
     }
 
     public class SeedService : ISeedService
@@ -23,7 +24,7 @@ namespace HGV.Tarrasque.Collection.Services
             this.client = client;
         }
 
-        public async Task Seed(TextWriter writer)
+        public async Task SeedCheckpoint(TextWriter writer)
         {
             var checkpoint = new Models.Checkpoint();
 
@@ -34,6 +35,15 @@ namespace HGV.Tarrasque.Collection.Services
 
             var output = JsonConvert.SerializeObject(checkpoint);
             await writer.WriteAsync(output);
+        }
+
+        public async Task SeedHistory(TextWriter writer)
+        {
+            var checkpoint = new Models.History();
+
+            var output = JsonConvert.SerializeObject(checkpoint);
+            await writer.WriteAsync(output);
+
         }
     }
 }

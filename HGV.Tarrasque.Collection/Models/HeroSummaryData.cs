@@ -21,7 +21,7 @@ namespace HGV.Tarrasque.Collection.Models
     public class HeroSummaryData
     {
         public  int Region { get; set; }
-        public DateTimeOffset Date { get; set; }
+        public DateTime Date { get; set; }
         public List<HeroData> Heroes { get; set; }
 
         public HeroSummaryData()

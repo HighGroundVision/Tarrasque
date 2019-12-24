@@ -1,12 +1,11 @@
-﻿using System;
-using HGV.Daedalus;
-using HGV.Tarrasque.Collection.Services;
+﻿using HGV.Daedalus;
+using HGV.Tarrasque.Common;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
-[assembly: FunctionsStartup(typeof(HGV.Tarrasque.Collection.Startup))]
+[assembly: FunctionsStartup(typeof(HGV.Tarrasque.Seed.Startup))]
 
-namespace HGV.Tarrasque.Collection
+namespace HGV.Tarrasque.Seed
 {
     public class Startup : FunctionsStartup
     {
@@ -16,9 +15,6 @@ namespace HGV.Tarrasque.Collection
 
             builder.Services.AddSingleton<ISteamKeyProvider, SteamKeyProvider>();
             builder.Services.AddSingleton<IDotaApiClient, DotaApiClient>();
-            builder.Services.AddSingleton<ICollectService, CollectService>();
-            builder.Services.AddSingleton<ISeedService, SeedService>();
-            builder.Services.AddSingleton<IProcessMatchService, ProcessMatchService>();
         }
     }
 }

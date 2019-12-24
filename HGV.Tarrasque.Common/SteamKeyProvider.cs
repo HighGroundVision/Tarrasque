@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.Collection
+namespace HGV.Tarrasque.Common
 {
     public class SteamKeyProvider : ISteamKeyProvider
     {
