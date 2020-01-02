@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HGV.Tarrasque.ProcessCheckpoint": {
+      "commandName": "Project",
+      "commandLineArgs": "host start --port 7073"
+    }
+  }
+}

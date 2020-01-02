@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HGV.Tarrasque.Seed": {
+      "commandName": "Project",
+      "commandLineArgs": "host start --port 7072"
+    }
+  }
+}
