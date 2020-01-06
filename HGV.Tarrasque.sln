@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Api", "HGV.Ta
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Tests", "HGV.Tarrasque.Tests\HGV.Tarrasque.Tests.csproj", "{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.StoreMatch", "HGV.Tarrasque.StoreMatch\HGV.Tarrasque.StoreMatch.csproj", "{40A23675-7B6E-41B4-B402-E70B1007C086}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.StoreMatch", "HGV.Tarrasque.StoreMatch\HGV.Tarrasque.StoreMatch.csproj", "{40A23675-7B6E-41B4-B402-E70B1007C086}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
