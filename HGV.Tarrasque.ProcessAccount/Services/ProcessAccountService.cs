@@ -34,7 +34,7 @@ namespace HGV.Tarrasque.ProcessAccount.Services
 
         public async Task<Profile> GetProfile(long steamId)
         {
-            Guard.Argument(steamId, nameof(steamId)).NotNegative().NotZero();
+            Guard.Argument(steamId, nameof(steamId)).Positive().NotZero();
 
             var policy = Policy
                 .Handle<Exception>()

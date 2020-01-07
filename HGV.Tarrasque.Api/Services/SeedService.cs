@@ -1,7 +1,11 @@
-﻿using HGV.Daedalus;
+﻿using Dawn;
+using HGV.Daedalus;
+using HGV.Daedalus.GetMatchHistory;
 using HGV.Tarrasque.Common.Models;
 using Newtonsoft.Json;
+using Polly;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,10 +29,24 @@ namespace HGV.Tarrasque.Api.Services
 
         public async Task SeedCheckpoint(TextWriter writer)
         {
+            Guard.Argument(writer, nameof(writer)).NotNull();
+
             var checkpoint = new Checkpoint();
 
-            // Error Trap - Polly
-            var matches = await this.client.GetLastestMatches();
+            var policy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(10),
+                    TimeSpan.FromSeconds(30),
+                    TimeSpan.FromSeconds(30),
+                });
+
+            var matches = await policy.ExecuteAsync<List<Match>>(async () =>
+            {
+                return await this.client.GetLastestMatches();
+            });
 
             checkpoint.Latest = matches.Max(_ => _.match_seq_num);
 
@@ -38,6 +56,8 @@ namespace HGV.Tarrasque.Api.Services
 
         public async Task SeedHistory(TextWriter writer)
         {
+            Guard.Argument(writer, nameof(writer)).NotNull();
+
             var checkpoint = new History();
 
             var output = JsonConvert.SerializeObject(checkpoint);

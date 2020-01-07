@@ -1,4 +1,5 @@
-﻿using HGV.Basilius;
+﻿using Dawn;
+using HGV.Basilius;
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
@@ -32,8 +33,10 @@ namespace HGV.Tarrasque.StoreMatch.Services
             this.metaClient = MetaClient.Instance.Value;
         }
 
-        public async Task<Match> FetchMatch(long id)
+        public async Task<Match> FetchMatch(long matchId)
         {
+            Guard.Argument(matchId, nameof(matchId)).Positive().NotZero();
+
             var policy = Policy
                 .Handle<Exception>()
                 .WaitAndRetryAsync(new[]
@@ -46,7 +49,7 @@ namespace HGV.Tarrasque.StoreMatch.Services
 
             var match = await policy.ExecuteAsync<Match>(async () =>
             {
-                var details = await this.apiClient.GetMatchDetails(id);
+                var details = await this.apiClient.GetMatchDetails(matchId);
                 return details;
             });
 
@@ -55,11 +58,8 @@ namespace HGV.Tarrasque.StoreMatch.Services
 
         public async Task StoreMatch(Match match, TextWriter writer)
         {
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
-
-            if (writer == null)
-                throw new ArgumentNullException(nameof(writer));
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(writer, nameof(writer)).NotNull();
 
             var json = JsonConvert.SerializeObject(match);
             await writer.WriteAsync(json);
