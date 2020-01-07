@@ -1,17 +1,18 @@
-using System;
-using System.Threading.Tasks;
 using HGV.Tarrasque.Common.Models;
+using HGV.Tarrasque.ProcessHero.Services;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.ProcessHero
 {
     public class FnProcessHero
     {
-        private readonly IProcessRegionService _service;
+        private readonly IProcessHeroService _service;
 
-        public FnProcessHero(IProcessRegionService service)
+        public FnProcessHero(IProcessHeroService service)
         {
             _service = service;
         }
@@ -19,13 +20,12 @@ namespace HGV.Tarrasque.ProcessHero
         [FunctionName("FnProcessHero")]
         public async Task Process(
             [QueueTrigger("hgv-heroes")]HeroReference item,
-            [Blob("hgv-matches/{Match}.json")]TextReader readerMatch,
-            [Blob("hgv-regions/{Region}.json")]TextReader readerRegion,
-            [Blob("hgv-regions/{Region}.json")]TextWriter writerRegion,
+            [Blob("hgv-heroes/{Region}/{Date}/{Hero}.json")]TextReader readHero,
+            [Blob("hgv-heroes/{Region}/{Date}/{Hero}.json")]TextWriter writerHero,
             ILogger log
         )
         {
-            
+            await _service.ProcessHero(item, readHero, writerHero);
         }
     }
 }

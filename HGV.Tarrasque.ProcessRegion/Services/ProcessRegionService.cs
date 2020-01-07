@@ -1,13 +1,9 @@
-﻿using HGV.Basilius;
-using HGV.Daedalus;
+﻿using Dawn;
 using HGV.Daedalus.GetMatchDetails;
-using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
 using Newtonsoft.Json;
-using System;
 using System.IO;
 using System.Threading.Tasks;
-using Dawn;
 
 namespace HGV.Tarrasque.ProcessRegion.Services
 {
@@ -18,22 +14,8 @@ namespace HGV.Tarrasque.ProcessRegion.Services
 
     public class ProcessRegionService : IProcessRegionService
     {
-        private readonly IDotaApiClient apiClient;
-        private readonly MetaClient metaClient;
-
-        public ProcessRegionService(IDotaApiClient client)
+        public ProcessRegionService()
         {
-            this.apiClient = client;
-            this.metaClient = MetaClient.Instance.Value;
-        }
-
-        public async Task<Match> ReadMatch(TextReader reader)
-        {
-            Guard.Argument(reader, nameof(reader)).NotNull();
-
-            var input = await reader.ReadToEndAsync();
-            var match = JsonConvert.DeserializeObject<Match>(input);
-            return match;
         }
 
         public async Task ProcessRegion(RegionReference regionRef, TextReader reader, TextWriter writer)

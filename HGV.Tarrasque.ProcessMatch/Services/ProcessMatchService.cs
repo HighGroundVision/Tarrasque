@@ -52,12 +52,14 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             Guard.Argument(match, nameof(match)).NotNull();
             Guard.Argument(queue, nameof(queue)).NotNull();
 
-            await queue.AddAsync(new RegionReference()
+            var data = new RegionReference()
             {
                 Match = match.match_id,
                 Region = match.GetRegion(),
-                Date = match.GetStart().Date
-            });
+                Date = match.GetStart().ToString("yy-MM-dd")
+            };
+
+            await queue.AddAsync(data);
         }
 
         public async Task QueueHeroes(Match match, IAsyncCollector<HeroReference> queue)

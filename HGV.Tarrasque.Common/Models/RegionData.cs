@@ -10,11 +10,11 @@ namespace HGV.Tarrasque.Common.Models
     {
         public int Id { get; set; }
 
-        public Dictionary<DateTime, int> Range { get; set; }
+        public Dictionary<string, int> Range { get; set; }
 
         public RegionData()
         {
-            this.Range = new Dictionary<DateTime, int>();
+            this.Range = new Dictionary<string, int>();
         }
     }
 }

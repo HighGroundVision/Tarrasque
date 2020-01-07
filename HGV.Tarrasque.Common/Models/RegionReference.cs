@@ -12,6 +12,6 @@ namespace HGV.Tarrasque.Common.Models
 
         public int Region { get; set; }
 
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
     }
 }
