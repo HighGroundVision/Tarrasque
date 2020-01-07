@@ -1,15 +1,15 @@
 ﻿using HGV.Daedalus.GetMatchDetails;
+using HGV.Tarrasque.Common.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace HGV.Tarrasque.Common.Models
 {
-    public class AccountReference
+    public class RegionReference
     {
-        public long Account { get; set; }
         public long Match { get; set; }
 
-        public long Steam { get { return Account + 76561197960265728L; } }
+        public int Region { get; set; }
     }
 }

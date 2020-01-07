@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Seed", "HGV.Tarrasque.Seed\HGV.Tarrasque.Seed.csproj", "{042CD06D-7468-4C2D-90B4-2E4D80AE9B60}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Common", "HGV.Tarrasque.Common\HGV.Tarrasque.Common.csproj", "{A493FF01-0475-4353-9F5C-43F211A78109}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessCheckpoint", "HGV.Tarrasque.ProcessCheckpoint\HGV.Tarrasque.ProcessCheckpoint.csproj", "{AD1292DE-AE53-4B7E-BD57-134BC9F6A51D}"
@@ -15,12 +17,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Api", "HGV.Ta
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Tests", "HGV.Tarrasque.Tests\HGV.Tarrasque.Tests.csproj", "{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.StoreMatch", "HGV.Tarrasque.StoreMatch\HGV.Tarrasque.StoreMatch.csproj", "{40A23675-7B6E-41B4-B402-E70B1007C086}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{042CD06D-7468-4C2D-90B4-2E4D80AE9B60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{042CD06D-7468-4C2D-90B4-2E4D80AE9B60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{042CD06D-7468-4C2D-90B4-2E4D80AE9B60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{042CD06D-7468-4C2D-90B4-2E4D80AE9B60}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A493FF01-0475-4353-9F5C-43F211A78109}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A493FF01-0475-4353-9F5C-43F211A78109}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A493FF01-0475-4353-9F5C-43F211A78109}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -45,6 +53,10 @@ Global
 		{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40A23675-7B6E-41B4-B402-E70B1007C086}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40A23675-7B6E-41B4-B402-E70B1007C086}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40A23675-7B6E-41B4-B402-E70B1007C086}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40A23675-7B6E-41B4-B402-E70B1007C086}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
