@@ -16,9 +16,7 @@ namespace HGV.Tarrasque.ProcessAccount.Services
 {
     public interface IProcessAccountService
     {
-        Task<Match> ReadMatch(TextReader reader);
-        Task<Profile> GetProfile(long steamId);
-        Task UpdateAccount(long accountId, Match match, Profile profile, TextReader reader, TextWriter writer);
+        Task ProcessAcount(AccountReference accountRef, TextReader reader, TextWriter writer);
     }
 
     public class ProcessAccountService : IProcessAccountService
@@ -32,7 +30,20 @@ namespace HGV.Tarrasque.ProcessAccount.Services
             this.metaClient = MetaClient.Instance.Value;
         }
 
-        public async Task<Profile> GetProfile(long steamId)
+        public async Task ProcessAcount(AccountReference accountRef,  TextReader reader, TextWriter writer)
+        {
+            Guard.Argument(accountRef, nameof(accountRef)).NotNull();
+            Guard.Argument(writer, nameof(writer)).NotNull();
+
+            var profile = await GetProfile(accountRef.Steam);
+
+            if (reader == null)
+                await NewAccount(accountRef, profile, writer);
+            else
+                await UpdateAccount(accountRef, profile, reader, writer);
+        }
+
+        private async Task<Profile> GetProfile(long steamId)
         {
             Guard.Argument(steamId, nameof(steamId)).Positive().NotZero();
 
@@ -46,7 +57,7 @@ namespace HGV.Tarrasque.ProcessAccount.Services
                     TimeSpan.FromSeconds(30),
                 });
 
-            var player = await policy.ExecuteAsync<Daedalus.GetPlayerSummaries.Player>(async () =>
+            var player = await policy.ExecuteAsync<Profile>(async () =>
             {
                 return await this.apiClient.GetPlayerSummary(steamId);
             });
@@ -54,83 +65,58 @@ namespace HGV.Tarrasque.ProcessAccount.Services
             return player;
         }
 
-        public async Task<Match> ReadMatch(TextReader reader)
+        private static async Task NewAccount(AccountReference regionRef, Profile profile, TextWriter writer)
         {
-            Guard.Argument(reader, nameof(reader)).NotNull();
-
-            var input = await reader.ReadToEndAsync();
-            return JsonConvert.DeserializeObject<Match>(input);
-        }
-
-        public async Task UpdateAccount(long accountId, Match match, Profile profile, TextReader reader, TextWriter writer)
-        {
-            Guard.Argument(accountId, nameof(accountId)).NotNegative().NotZero();
-            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(regionRef, nameof(regionRef)).NotNull();
             Guard.Argument(profile, nameof(profile)).NotNull();
             Guard.Argument(writer, nameof(writer)).NotNull();
 
-            var player = GetPlayer(accountId, match);
-            var skills = this.metaClient.GetSkills();
-            var abilities = player.ability_upgrades
-                .Select(_ => _.ability)
-                .Distinct()
-                .Join(skills, _ => _, _ => _.Id, (lhs, rhs) => lhs)
-                .ToList();
+            var data = new AccountData();
+            data.AccountId = regionRef.Account;
+            data.SteamId = profile.steamid;
 
-            Func<AccountData> init = () =>
-            {
-                return new AccountData()
-                {
-                    AccountId = accountId,
-                    SteamId = profile.steamid,
-                    Avatar = profile.avatar,
-                };
-            };
-
-            Action<AccountData> update = _ =>
-            {
-                _.Persona = profile.personaname;
-                _.Avatar = profile.avatar;
-                _.Matches.Add(match.match_id);
-                _.Total++;
-
-                if (match.Victory(player))
-                {
-                    _.Wins++;
-                    _.AddHeroWin(player.hero_id);
-                    _.AddAbilitiesWin(abilities);
-                }
-                else
-                {
-                    _.Losses++;
-                    _.AddHeroLose(player.hero_id);
-                    _.AddAbilitiesLose(abilities);
-                }
-            };
-
-            await ReadUpdateWriteHandler(reader, writer, init, update);
-        }
-
-        private static Player GetPlayer(long AccountId, Match match)
-        {
-            var player = match.players.Find(_ => _.account_id == AccountId);
-            if (player == null)
-                throw new NullReferenceException($"Player [{AccountId}] is not part of Match [{match.match_id}]");
-
-            return player;
-        }
-
-        private static async Task ReadUpdateWriteHandler<T>(TextReader reader, TextWriter writer, Func<T> init, Action<T> update) where T : class
-        {
-            if (reader == null)
-                reader = new StringReader(string.Empty);
-
-            var input = await reader.ReadToEndAsync();
-            var data = string.IsNullOrWhiteSpace(input) ? init() : JsonConvert.DeserializeObject<T>(input);
-            update(data);
+            SetAccountData(regionRef, profile, data);
 
             var output = JsonConvert.SerializeObject(data);
             await writer.WriteAsync(output);
         }
+
+        private static async Task UpdateAccount(AccountReference regionRef, Profile profile, TextReader reader, TextWriter writer)
+        {
+            Guard.Argument(regionRef, nameof(regionRef)).NotNull();
+            Guard.Argument(profile, nameof(profile)).NotNull();
+            Guard.Argument(reader, nameof(reader)).NotNull();
+            Guard.Argument(writer, nameof(writer)).NotNull();
+
+            var input = await reader.ReadToEndAsync();
+            var data = JsonConvert.DeserializeObject<AccountData>(input);
+
+            SetAccountData(regionRef, profile, data);
+
+            var output = JsonConvert.SerializeObject(data);
+            await writer.WriteAsync(output);
+        }
+
+        private static void SetAccountData(AccountReference regionRef, Profile profile, AccountData data)
+        {
+            data.Persona = profile.personaname;
+            data.Avatar = profile.avatar;
+            data.Matches.Add(regionRef.Match);
+            data.Total++;
+
+            if (regionRef.Victory)
+            {
+                data.Wins++;
+                data.AddHeroWin(regionRef.Hero);
+                data.AddAbilitiesWin(regionRef.Abilities);
+            }
+            else
+            {
+                data.Losses++;
+                data.AddHeroLose(regionRef.Hero);
+                data.AddAbilitiesLose(regionRef.Abilities);
+            }
+        }
+
     }
 }

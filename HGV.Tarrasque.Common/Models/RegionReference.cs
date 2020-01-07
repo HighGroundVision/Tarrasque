@@ -11,5 +11,7 @@ namespace HGV.Tarrasque.Common.Models
         public long Match { get; set; }
 
         public int Region { get; set; }
+
+        public DateTime Date { get; set; }
     }
 }

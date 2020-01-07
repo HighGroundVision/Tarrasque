@@ -55,7 +55,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             await queue.AddAsync(new RegionReference()
             {
                 Match = match.match_id,
-                Region = match.GetRegion()
+                Region = match.GetRegion(),
+                Date = match.GetStart().Date
             });
         }
 
@@ -165,18 +166,15 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var abilities = player.ability_upgrades
                     .Select(_ => _.ability)
                     .Distinct()
-                    .Join(skills, _ => _, _ => _.Id, (lhs, rhs) => rhs)
+                    .Join(skills, _ => _, _ => _.Id, (lhs, rhs) => lhs)
                     .ToList();
 
                 var item = new AccountReference();
                 item.Match = match.match_id;
                 item.Account = player.account_id;
-
-                // TODO: add the following to the AccountReference
-                // item.Victory = match.Victory(player);
-                // item.Hero = player.hero_id;
-                // item.Abilities = abilities;
-
+                item.Victory = match.Victory(player);
+                item.Hero = player.hero_id;
+                item.Abilities = abilities;
 
                 await queue.AddAsync(item);
             }

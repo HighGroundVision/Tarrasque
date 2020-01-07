@@ -20,16 +20,12 @@ namespace HGV.Tarrasque.ProcessAccount.Functions
 
         [FunctionName("FnProcessAccount")]
         public async Task Process(
-            [QueueTrigger("hgv-accounts")]AccountReference queue,
-            [Blob("hgv-matches/{Match}.json")]TextReader readerMatch,
+            [QueueTrigger("hgv-accounts")]AccountReference item,
             [Blob("hgv-accounts/{Account}.json")]TextReader readerAccount,
             [Blob("hgv-accounts/{Account}.json")]TextWriter writerAccount,
             ILogger log)
         {
-            var profile = await _service.GetProfile(queue.Steam);
-            var match = await _service.ReadMatch(readerMatch);
-
-            await _service.UpdateAccount(queue.Account, match, profile, readerAccount, writerAccount);
+            await _service.ProcessAcount(item, readerAccount, writerAccount);
         }
     }
 }

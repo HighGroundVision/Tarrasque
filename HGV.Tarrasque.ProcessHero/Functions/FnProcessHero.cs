@@ -1,32 +1,31 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using HGV.Tarrasque.Common.Models;
-using HGV.Tarrasque.ProcessRegion.Services;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 
-namespace HGV.Tarrasque.ProcessRegion
+namespace HGV.Tarrasque.ProcessHero
 {
-    public class FnProcessRegion
+    public class FnProcessHero
     {
         private readonly IProcessRegionService _service;
 
-        public FnProcessRegion(IProcessRegionService service)
+        public FnProcessHero(IProcessRegionService service)
         {
             _service = service;
         }
 
-        [FunctionName("FnProcessRegion")]
+        [FunctionName("FnProcessHero")]
         public async Task Process(
-            [QueueTrigger("hgv-regions")]RegionReference item,
+            [QueueTrigger("hgv-heroes")]HeroReference item,
+            [Blob("hgv-matches/{Match}.json")]TextReader readerMatch,
             [Blob("hgv-regions/{Region}.json")]TextReader readerRegion,
             [Blob("hgv-regions/{Region}.json")]TextWriter writerRegion,
             ILogger log
         )
         {
-            await _service.ProcessRegion(item, readerRegion, writerRegion);
+            
         }
     }
 }
