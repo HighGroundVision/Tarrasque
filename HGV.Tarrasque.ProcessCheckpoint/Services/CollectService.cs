@@ -1,4 +1,4 @@
-﻿using HGV.Basilius;
+﻿using Dawn;
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
@@ -30,6 +30,12 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
 
         public async Task Collect(TextReader readerCheckpoint, TextWriter writerCheckpoint, TextReader readerHistory, TextWriter writerHistory, IAsyncCollector<MatchReference> queue)
         {
+            Guard.Argument(readerCheckpoint, nameof(readerCheckpoint)).NotNull();
+            Guard.Argument(writerCheckpoint, nameof(writerCheckpoint)).NotNull();
+            Guard.Argument(readerHistory, nameof(readerHistory)).NotNull();
+            Guard.Argument(writerHistory, nameof(writerHistory)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
+
             var checkpoint = await ReadItem<Checkpoint>(readerCheckpoint);
             var history = await ReadItem<History>(readerHistory);
 

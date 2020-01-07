@@ -1,4 +1,5 @@
-﻿using HGV.Basilius;
+﻿using Dawn;
+using HGV.Basilius;
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
@@ -33,6 +34,8 @@ namespace HGV.Tarrasque.ProcessAccount.Services
 
         public async Task<Profile> GetProfile(long steamId)
         {
+            Guard.Argument(steamId, nameof(steamId)).NotNegative().NotZero();
+
             var policy = Policy
                 .Handle<Exception>()
                 .WaitAndRetryAsync(new[]
@@ -53,12 +56,19 @@ namespace HGV.Tarrasque.ProcessAccount.Services
 
         public async Task<Match> ReadMatch(TextReader reader)
         {
+            Guard.Argument(reader, nameof(reader)).NotNull();
+
             var input = await reader.ReadToEndAsync();
             return JsonConvert.DeserializeObject<Match>(input);
         }
 
         public async Task UpdateAccount(long accountId, Match match, Profile profile, TextReader reader, TextWriter writer)
         {
+            Guard.Argument(accountId, nameof(accountId)).NotNegative().NotZero();
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(profile, nameof(profile)).NotNull();
+            Guard.Argument(writer, nameof(writer)).NotNull();
+
             var player = GetPlayer(accountId, match);
             var skills = this.metaClient.GetSkills();
             var abilities = player.ability_upgrades
@@ -112,9 +122,6 @@ namespace HGV.Tarrasque.ProcessAccount.Services
 
         private static async Task ReadUpdateWriteHandler<T>(TextReader reader, TextWriter writer, Func<T> init, Action<T> update) where T : class
         {
-            if (writer == null)
-                throw new ArgumentNullException(nameof(writer));
-
             if (reader == null)
                 reader = new StringReader(string.Empty);
 

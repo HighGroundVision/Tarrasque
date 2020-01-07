@@ -1,4 +1,5 @@
-﻿using HGV.Basilius;
+﻿using Dawn;
+using HGV.Basilius;
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
@@ -16,22 +17,11 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 {
     public interface IProcessMatchService
     {
-        // Task<Match> FetchMatch(long match);
-
-        // Task StoreMatch(Match match, TextWriter writer);
-
-        // Task UpdateRegion(Match match, TextReader reader, TextWriter writer);
-
-        // Task UpdateHeroes(Match match, TextReader reader, TextWriter writer);
-
-        // Task UpdateAbilities(Match match, TextReader reader, TextWriter writer);
-
         Task<Match> ReadMatch(TextReader reader);
 
         Task QueueRegions(Match match, IAsyncCollector<RegionReference> queue);
         Task QueueHeroes(Match match, IAsyncCollector<HeroReference> queue);
         Task QueueAbilities(Match match, IAsyncCollector<AbilityReference> queue);
-
         Task QueueAccounts(Match match, IAsyncCollector<AccountReference> queue);
     }
 
@@ -50,8 +40,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         public async Task<Match> ReadMatch(TextReader reader)
         {
-            if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
+            Guard.Argument(reader, nameof(reader)).NotNull();
 
             var input = await reader.ReadToEndAsync();
             var match = JsonConvert.DeserializeObject<Match>(input);
@@ -60,11 +49,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         public async Task QueueRegions(Match match, IAsyncCollector<RegionReference> queue)
         {
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
-
-            if (queue == null)
-                throw new ArgumentNullException(nameof(queue));
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
 
             await queue.AddAsync(new RegionReference()
             {
@@ -75,11 +61,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         public async Task QueueHeroes(Match match, IAsyncCollector<HeroReference> queue)
         {
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
-
-            if (queue == null)
-                throw new ArgumentNullException(nameof(queue));
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
 
             var maxAssists = match.players.Max(_ => _.assists);
             var maxGold = match.players.Max(_ => _.gold);
@@ -119,11 +102,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         public async Task QueueAbilities(Match match, IAsyncCollector<AbilityReference> queue)
         {
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
-
-            if (queue == null)
-                throw new ArgumentNullException(nameof(queue));
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
 
             var maxAssists = match.players.Max(_ => _.assists);
             var maxGold = match.players.Max(_ => _.gold);
@@ -176,11 +156,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
         private const long CATCH_ALL_ACCOUNT = 4294967295;
         public async Task QueueAccounts(Match match, IAsyncCollector<AccountReference> queue)
         {
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
-
-            if (queue == null)
-                throw new ArgumentNullException(nameof(queue));
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
 
             var players = match.players.Where(_ => _.account_id != CATCH_ALL_ACCOUNT).ToList();
             foreach (var player in players)
@@ -194,9 +171,12 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var item = new AccountReference();
                 item.Match = match.match_id;
                 item.Account = player.account_id;
+
+                // TODO: add the following to the AccountReference
                 // item.Victory = match.Victory(player);
                 // item.Hero = player.hero_id;
                 // item.Abilities = abilities;
+
 
                 await queue.AddAsync(item);
             }

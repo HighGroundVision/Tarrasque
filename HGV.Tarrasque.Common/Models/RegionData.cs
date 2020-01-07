@@ -12,14 +12,9 @@ namespace HGV.Tarrasque.Common.Models
 
         public Dictionary<DateTime, int> Range { get; set; }
 
-        public RegionData(Match item)
-        {
-            this.Id = item.GetRegion();
-            this.Range = new Dictionary<DateTime, int>();
-        }
-
         public RegionData()
         {
+            this.Range = new Dictionary<DateTime, int>();
         }
     }
 }

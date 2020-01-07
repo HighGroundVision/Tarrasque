@@ -5,17 +5,16 @@ using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
+using Dawn;
 
 namespace HGV.Tarrasque.ProcessRegion.Services
 {
     public interface IProcessRegionService
     {
         Task<Match> ReadMatch(TextReader reader);
-        Task UpdateRegion(Match match, TextReader reader, TextWriter writer);
+        Task ProcessRegion(Match match, TextReader reader, TextWriter writer);
     }
 
     public class ProcessRegionService : IProcessRegionService
@@ -31,51 +30,58 @@ namespace HGV.Tarrasque.ProcessRegion.Services
 
         public async Task<Match> ReadMatch(TextReader reader)
         {
-            if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
+            Guard.Argument(reader, nameof(reader)).NotNull();
 
             var input = await reader.ReadToEndAsync();
             var match = JsonConvert.DeserializeObject<Match>(input);
             return match;
         }
 
-        public async Task UpdateRegion(Match match, TextReader reader, TextWriter writer)
+        public async Task ProcessRegion(Match match, TextReader reader, TextWriter writer)
         {
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(writer, nameof(writer)).NotNull();
 
-            if (writer == null)
-                throw new ArgumentNullException(nameof(writer));
-
-            Func<RegionData> init = () =>
-            {
-                return new RegionData(match);
-            };
-
-            Action<RegionData> update = _ =>
-            {
-                var date = match.GetStart().Date;
-                if (_.Range.ContainsKey(date))
-                    _.Range[date]++;
-                else
-                    _.Range.Add(date, 1);
-            };
-
-            await this.ReadUpdateWriteHandler(reader, writer, init, update);
+            if (reader == null)
+                await NewRegion(match, writer);
+            else
+                await UpdateRegion(match, reader, writer);
         }
 
-        private async Task ReadUpdateWriteHandler<T>(TextReader reader, TextWriter writer, Func<T> init, Action<T> update) where T : class
+        private static async Task NewRegion(Match match, TextWriter writer)
         {
-            if (reader == null)
-                reader = new StringReader(string.Empty);
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(writer, nameof(writer)).NotNull();
 
-            var input = await reader.ReadToEndAsync();
-            var data = string.IsNullOrWhiteSpace(input) ? init() : JsonConvert.DeserializeObject<T>(input);
+            var data = new RegionData();
+            data.Id = match.GetRegion();
 
-            update(data);
+            var date = match.GetStart().Date;
+            data.Range.Add(date, 1);
 
             var output = JsonConvert.SerializeObject(data);
             await writer.WriteAsync(output);
         }
+
+        private static async Task UpdateRegion(Match match, TextReader reader, TextWriter writer)
+        {
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(reader, nameof(reader)).NotNull();
+            Guard.Argument(writer, nameof(writer)).NotNull();
+
+            var input = await reader.ReadToEndAsync();
+            var data = JsonConvert.DeserializeObject<RegionData>(input);
+
+            var date = match.GetStart().Date;
+            if (data.Range.ContainsKey(date))
+                data.Range[date]++;
+            else
+                data.Range.Add(date, 1);
+
+            var output = JsonConvert.SerializeObject(data);
+            await writer.WriteAsync(output);
+        }
+
+       
     }
 }

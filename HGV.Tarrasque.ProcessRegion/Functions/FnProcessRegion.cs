@@ -28,7 +28,7 @@ namespace HGV.Tarrasque.ProcessRegion
         )
         {
             var match = await _service.ReadMatch(readerMatch);
-            await _service.UpdateRegion(match, readerRegion, writerRegion);
+            await _service.ProcessRegion(match, readerRegion, writerRegion);
         }
     }
 }

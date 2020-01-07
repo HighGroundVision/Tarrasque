@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Dawn.Guard" Version="1.10.0" />
     <PackageReference Include="HGV.Basilius" Version="2.0.52" />
     <PackageReference Include="HGV.Daedalus" Version="1.1.14" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />

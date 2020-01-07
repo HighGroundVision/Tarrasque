@@ -26,13 +26,7 @@ namespace HGV.Tarrasque.ProcessAccount.Functions
             [Blob("hgv-accounts/{Account}.json")]TextWriter writerAccount,
             ILogger log)
         {
-            if(readerMatch == null)
-                throw new ArgumentNullException(nameof(readerMatch), "Unable to Read Lock the Match");
-
             var profile = await _service.GetProfile(queue.Steam);
-            if (profile == null)
-                throw new NullReferenceException("Invalid Steam Id");
-
             var match = await _service.ReadMatch(readerMatch);
 
             await _service.UpdateAccount(queue.Account, match, profile, readerAccount, writerAccount);
