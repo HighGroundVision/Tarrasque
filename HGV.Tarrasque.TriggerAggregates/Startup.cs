@@ -1,6 +1,4 @@
-﻿using HGV.Daedalus;
-using HGV.Tarrasque.Common;
-// using HGV.Tarrasque.TriggerAggregates.Services;
+﻿using HGV.Tarrasque.TriggerAggregates.Services;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,7 +10,7 @@ namespace HGV.Tarrasque.TriggerAggregates
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            // builder.Services.AddSingleton<IStoreMatchService, StoreMatchService>();
+            builder.Services.AddSingleton<ITriggerAggregatesService, TriggerAggregatesService>();
         }
     }
 }
