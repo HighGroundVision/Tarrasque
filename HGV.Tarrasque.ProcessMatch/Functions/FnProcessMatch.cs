@@ -33,6 +33,7 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
             var match = await _service.ReadMatch(readerMatch);
             await _service.QueueRegions(match, queueRegions);
             await _service.QueueHeroes(match, queueHeroes);
+            await _service.QueueHeroAbilities(match, queueHeroAbilities);
             await _service.QueueAbilities(match, queueAbilities);
             await _service.QueueAccounts(match, queueAccounts);
         }

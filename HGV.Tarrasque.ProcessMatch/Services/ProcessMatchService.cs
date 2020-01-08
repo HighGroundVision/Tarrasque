@@ -116,33 +116,42 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
             foreach (var player in match.players)
             {
-                var item = new HeroAbilityReference();
-                item.Match = match.match_id;
-                item.Date = match.GetStart().ToString("yy-MM-dd");
-                item.Region = match.GetRegion();
-                item.Hero = player.hero_id;
-                item.Ability = 0;
+                var abilities = player.ability_upgrades
+                    .Select(_ => _.ability)
+                    .Distinct()
+                    .Join(this.skills, _ => _, _ => _.Id, (lhs, rhs) => rhs)
+                    .ToList();
 
-                item.DraftOrder = player.DraftOrder();
+                foreach (var ability in abilities)
+                {
+                    var item = new HeroAbilityReference();
+                    item.Match = match.match_id;
+                    item.Date = match.GetStart().ToString("yy-MM-dd");
+                    item.Region = match.GetRegion();
+                    item.Hero = player.hero_id;
+                    item.Ability = ability.Id;
 
-                if (match.Victory(player))
-                    item.Wins++;
-                else
-                    item.Losses++;
+                    item.DraftOrder = player.DraftOrder();
 
-                if (player.assists == maxAssists)
-                    item.MaxAssists++;
+                    if (match.Victory(player))
+                        item.Wins++;
+                    else
+                        item.Losses++;
 
-                if (player.gold == maxGold)
-                    item.MaxGold++;
+                    if (player.assists == maxAssists)
+                        item.MaxAssists++;
 
-                if (player.kills == maxKills)
-                    item.MaxKills++;
+                    if (player.gold == maxGold)
+                        item.MaxGold++;
 
-                if (player.deaths == minDeaths)
-                    item.MinDeaths++;
+                    if (player.kills == maxKills)
+                        item.MaxKills++;
 
-                await queue.AddAsync(item);
+                    if (player.deaths == minDeaths)
+                        item.MinDeaths++;
+
+                    await queue.AddAsync(item);
+                }
             }
         }
 
