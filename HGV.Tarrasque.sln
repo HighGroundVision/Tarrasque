@@ -17,9 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Tests", "HGV.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.StoreMatch", "HGV.Tarrasque.StoreMatch\HGV.Tarrasque.StoreMatch.csproj", "{40A23675-7B6E-41B4-B402-E70B1007C086}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.ProcessRegion", "HGV.Tarrasque.ProcessRegion\HGV.Tarrasque.ProcessRegion.csproj", "{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessRegion", "HGV.Tarrasque.ProcessRegion\HGV.Tarrasque.ProcessRegion.csproj", "{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.ProcessHero", "HGV.Tarrasque.ProcessHero\HGV.Tarrasque.ProcessHero.csproj", "{5F82F04C-8DDD-4FE7-B449-22382161C85E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessHero", "HGV.Tarrasque.ProcessHero\HGV.Tarrasque.ProcessHero.csproj", "{5F82F04C-8DDD-4FE7-B449-22382161C85E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
