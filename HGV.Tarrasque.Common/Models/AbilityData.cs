@@ -8,7 +8,9 @@ namespace HGV.Tarrasque.Common.Models
 {
     public class AbilityData
     {
-        public string AbilityId { get; set; }
+        public int Region { get; set; }
+        public string Date { get; set; }
+        public int AbilityId { get; set; }
         public int Total { get; set; }
         public int Wins { get; set; }
         public int Losses { get; set; }
@@ -18,29 +20,6 @@ namespace HGV.Tarrasque.Common.Models
         public int MaxAssists { get; set; }
         public int MinDeaths { get; set; }
         public int MaxGold { get; set; }
-
-        public AbilityData()
-        {
-            this.AbilityId = "0";
-        }
     }
-
-    public class AbilitySummaryData
-    {
-        public int Region { get; set; }
-        public DateTime Date { get; set; }
-        public List<AbilityData> Abilities { get; set; }
-
-        public AbilitySummaryData(Match item)
-        {
-            this.Region = item.GetRegion();
-            this.Date = item.GetStart().Date;
-            this.Abilities = new List<AbilityData>();
-        }
-
-        public AbilitySummaryData()
-        {
-
-        }
     }
 }

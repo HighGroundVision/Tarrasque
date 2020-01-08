@@ -11,7 +11,7 @@ namespace HGV.Tarrasque.Common.Models
         public ulong Match { get; set; }
         public string Date { get; set; }
         public int Region { get; set; }
-        public string Ability { get; set; }
+        public int Ability { get; set; }
         public int DraftOrder { get; set; }
         public int Wins { get; set; }
         public int Losses { get; set; }

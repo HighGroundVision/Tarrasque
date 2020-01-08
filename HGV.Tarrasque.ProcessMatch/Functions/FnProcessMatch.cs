@@ -2,11 +2,8 @@ using HGV.Tarrasque.ProcessMatch.Services;
 using HGV.Tarrasque.Common.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using System;
 using System.IO;
 using System.Threading.Tasks;
-using HGV.Daedalus.GetMatchDetails;
-using Newtonsoft.Json;
 
 namespace HGV.Tarrasque.ProcessMatch.Functions
 {

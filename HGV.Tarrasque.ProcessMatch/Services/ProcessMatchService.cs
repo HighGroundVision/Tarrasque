@@ -179,6 +179,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                     item.Match = match.match_id;
                     item.Date = match.GetStart().ToString("yy-MM-dd");
                     item.Region = match.GetRegion();
+                    item.Ability = ability.Id;
 
                     item.DraftOrder = player.DraftOrder();
 
