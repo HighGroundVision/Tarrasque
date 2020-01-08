@@ -15,22 +15,22 @@ namespace HGV.Tarrasque.Common.Models
 
     public class AccountData : WinRateData
     {
-        public long AccountId { get; set; }
-        public long SteamId { get; set; }
+        public uint AccountId { get; set; }
+        public ulong SteamId { get; set; }
         public string Persona { get; set; }
         public string Avatar { get; set; }
 
         public IDictionary<int, WinRateData> Heroes { get; set; }
-        public IDictionary<string, WinRateData> Abilities { get; set; }
-        public IList<long> Matches { get; set; }
+        public IDictionary<int, WinRateData> Abilities { get; set; }
+        public IList<ulong> Matches { get; set; }
 
         public AccountData()
         {
             this.Persona = string.Empty;
             this.Avatar = string.Empty;
-            this.Matches = new List<long>();
+            this.Matches = new List<ulong>();
             this.Heroes = new Dictionary<int, WinRateData>();
-            this.Abilities = new Dictionary<string, WinRateData>();
+            this.Abilities = new Dictionary<int, WinRateData>();
         }
 
         public void AddHeroWin(int id)
@@ -58,7 +58,7 @@ namespace HGV.Tarrasque.Common.Models
             }
         }
 
-        public void AddAbilitiesWin(List<string> upgrades)
+        public void AddAbilitiesWin(List<int> upgrades)
         {
             foreach (var id in upgrades)
             {
@@ -74,7 +74,7 @@ namespace HGV.Tarrasque.Common.Models
             }
         }
 
-        public void AddAbilitiesLose(List<string> upgrades)
+        public void AddAbilitiesLose(List<int> upgrades)
         {
             foreach (var id in upgrades)
             {

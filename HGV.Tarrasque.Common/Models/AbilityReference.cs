@@ -8,7 +8,7 @@ namespace HGV.Tarrasque.Common.Models
 {
     public class AbilityReference
     {
-        public long Match { get; set; }
+        public ulong Match { get; set; }
         public string Date { get; set; }
         public int Region { get; set; }
         public string Ability { get; set; }

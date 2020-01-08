@@ -8,7 +8,7 @@ namespace HGV.Tarrasque.Common.Models
 {
     public class RegionReference
     {
-        public long Match { get; set; }
+        public ulong Match { get; set; }
 
         public int Region { get; set; }
 

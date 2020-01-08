@@ -25,6 +25,7 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
             [Blob("hgv-matches/{Match}.json")]TextReader readerMatch,
             [Queue("hgv-regions")]IAsyncCollector<RegionReference> queueRegions,
             [Queue("hgv-heroes")]IAsyncCollector<HeroReference> queueHeroes,
+            [Queue("hgv-hero-abilities")]IAsyncCollector<HeroAbilityReference> queueHeroAbilities,
             [Queue("hgv-abilities")]IAsyncCollector<AbilityReference> queueAbilities,
             [Queue("hgv-accounts")]IAsyncCollector<AccountReference> queueAccounts,
             ILogger log)

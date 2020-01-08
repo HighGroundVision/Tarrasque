@@ -6,6 +6,6 @@ namespace HGV.Tarrasque.Common.Models
 {
     public class HeroAbilityReference : HeroReference
     {
-        public string Ability { get; set; }
+        public int Ability { get; set; }
     }
 }

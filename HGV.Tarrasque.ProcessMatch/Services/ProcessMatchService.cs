@@ -21,6 +21,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         Task QueueRegions(Match match, IAsyncCollector<RegionReference> queue);
         Task QueueHeroes(Match match, IAsyncCollector<HeroReference> queue);
+        Task QueueHeroAbilities(Match match, IAsyncCollector<HeroAbilityReference> queue);
         Task QueueAbilities(Match match, IAsyncCollector<AbilityReference> queue);
         Task QueueAccounts(Match match, IAsyncCollector<AccountReference> queue);
     }
@@ -79,6 +80,48 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 item.Date = match.GetStart().ToString("yy-MM-dd");
                 item.Region = match.GetRegion();
                 item.Hero = player.hero_id;
+
+                item.DraftOrder = player.DraftOrder();
+
+                if (match.Victory(player))
+                    item.Wins++;
+                else
+                    item.Losses++;
+
+                if (player.assists == maxAssists)
+                    item.MaxAssists++;
+
+                if (player.gold == maxGold)
+                    item.MaxGold++;
+
+                if (player.kills == maxKills)
+                    item.MaxKills++;
+
+                if (player.deaths == minDeaths)
+                    item.MinDeaths++;
+
+                await queue.AddAsync(item);
+            }
+        }
+
+        public async Task QueueHeroAbilities(Match match, IAsyncCollector<HeroAbilityReference> queue)
+        {
+            Guard.Argument(match, nameof(match)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
+
+            var maxAssists = match.players.Max(_ => _.assists);
+            var maxGold = match.players.Max(_ => _.gold);
+            var maxKills = match.players.Max(_ => _.kills);
+            var minDeaths = match.players.Min(_ => _.deaths);
+
+            foreach (var player in match.players)
+            {
+                var item = new HeroAbilityReference();
+                item.Match = match.match_id;
+                item.Date = match.GetStart().ToString("yy-MM-dd");
+                item.Region = match.GetRegion();
+                item.Hero = player.hero_id;
+                item.Ability = 0;
 
                 item.DraftOrder = player.DraftOrder();
 

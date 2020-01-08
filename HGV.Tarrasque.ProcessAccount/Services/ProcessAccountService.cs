@@ -43,7 +43,7 @@ namespace HGV.Tarrasque.ProcessAccount.Services
                 await UpdateAccount(accountRef, profile, reader, writer);
         }
 
-        private async Task<Profile> GetProfile(long steamId)
+        private async Task<Profile> GetProfile(ulong steamId)
         {
             Guard.Argument(steamId, nameof(steamId)).Positive().NotZero();
 

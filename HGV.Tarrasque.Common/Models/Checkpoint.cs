@@ -14,7 +14,7 @@ namespace HGV.Tarrasque.Common.Models
     public class Checkpoint
     {   
         public SplitRange Split { get; set; }
-        public long Latest { get; set; }
+        public ulong Latest { get; set; }
 
         public Checkpoint()
         {

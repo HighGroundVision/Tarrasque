@@ -81,7 +81,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             return obj;
         }
 
-        private async Task<List<Match>> TryGetMatches(long latest)
+        private async Task<List<Match>> TryGetMatches(ulong latest)
         {
             var policy = Policy
                  .Handle<Exception>()

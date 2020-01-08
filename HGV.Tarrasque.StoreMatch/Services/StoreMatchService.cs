@@ -16,7 +16,7 @@ namespace HGV.Tarrasque.StoreMatch.Services
 {
     public interface IStoreMatchService
     {
-        Task<Match> FetchMatch(long match);
+        Task<Match> FetchMatch(ulong match);
 
         Task StoreMatch(Match match, TextWriter writer);
 
@@ -33,7 +33,7 @@ namespace HGV.Tarrasque.StoreMatch.Services
             this.metaClient = MetaClient.Instance.Value;
         }
 
-        public async Task<Match> FetchMatch(long matchId)
+        public async Task<Match> FetchMatch(ulong matchId)
         {
             Guard.Argument(matchId, nameof(matchId)).Positive().NotZero();
 
