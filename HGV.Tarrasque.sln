@@ -19,11 +19,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessRegion
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessHero", "HGV.Tarrasque.ProcessHero\HGV.Tarrasque.ProcessHero.csproj", "{5F82F04C-8DDD-4FE7-B449-22382161C85E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.ProcessHeroAbilities", "HGV.Tarrasque.ProcessHeroAbilities\HGV.Tarrasque.ProcessHeroAbilities.csproj", "{85153858-FE07-4ACA-A3A9-7E43E7F58783}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessHeroAbilities", "HGV.Tarrasque.ProcessHeroAbilities\HGV.Tarrasque.ProcessHeroAbilities.csproj", "{85153858-FE07-4ACA-A3A9-7E43E7F58783}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.ProcessAbility", "HGV.Tarrasque.ProcessAbility\HGV.Tarrasque.ProcessAbility.csproj", "{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessAbility", "HGV.Tarrasque.ProcessAbility\HGV.Tarrasque.ProcessAbility.csproj", "{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.TriggerAggregates", "HGV.Tarrasque.TriggerAggregates\HGV.Tarrasque.TriggerAggregates.csproj", "{F2FDE382-92B5-400A-AD59-5F3206E54FC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.TriggerAggregates", "HGV.Tarrasque.TriggerAggregates\HGV.Tarrasque.TriggerAggregates.csproj", "{F2FDE382-92B5-400A-AD59-5F3206E54FC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.AggregateHero", "HGV.Tarrasque.AggregateHero\HGV.Tarrasque.AggregateHero.csproj", "{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
