@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessAccoun
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Api", "HGV.Tarrasque.Api\HGV.Tarrasque.Api.csproj", "{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Tests", "HGV.Tarrasque.Tests\HGV.Tarrasque.Tests.csproj", "{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.StoreMatch", "HGV.Tarrasque.StoreMatch\HGV.Tarrasque.StoreMatch.csproj", "{40A23675-7B6E-41B4-B402-E70B1007C086}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessRegion", "HGV.Tarrasque.ProcessRegion\HGV.Tarrasque.ProcessRegion.csproj", "{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}"
@@ -24,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.ProcessHeroAbilities", "HGV.Tarrasque.ProcessHeroAbilities\HGV.Tarrasque.ProcessHeroAbilities.csproj", "{85153858-FE07-4ACA-A3A9-7E43E7F58783}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.ProcessAbility", "HGV.Tarrasque.ProcessAbility\HGV.Tarrasque.ProcessAbility.csproj", "{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.TriggerAggregates", "HGV.Tarrasque.TriggerAggregates\HGV.Tarrasque.TriggerAggregates.csproj", "{F2FDE382-92B5-400A-AD59-5F3206E54FC8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,10 +51,6 @@ Global
 		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ACEB911A-E7E6-4F74-B68C-A9936A69BB94}.Release|Any CPU.Build.0 = Release|Any CPU
 		{40A23675-7B6E-41B4-B402-E70B1007C086}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{40A23675-7B6E-41B4-B402-E70B1007C086}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40A23675-7B6E-41B4-B402-E70B1007C086}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -75,6 +71,10 @@ Global
 		{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

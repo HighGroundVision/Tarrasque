@@ -21,5 +21,4 @@ namespace HGV.Tarrasque.Common.Models
         public int MinDeaths { get; set; }
         public int MaxGold { get; set; }
     }
-    }
 }
