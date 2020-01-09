@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessAbilit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.TriggerAggregates", "HGV.Tarrasque.TriggerAggregates\HGV.Tarrasque.TriggerAggregates.csproj", "{F2FDE382-92B5-400A-AD59-5F3206E54FC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.AggregateHero", "HGV.Tarrasque.AggregateHero\HGV.Tarrasque.AggregateHero.csproj", "{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateHero", "HGV.Tarrasque.AggregateHero\HGV.Tarrasque.AggregateHero.csproj", "{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
