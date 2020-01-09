@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HGV.Tarrasque.TriggerAggregates.Services
+namespace HGV.Tarrasque.AggregatesTrigger.Services
 {
     public interface ITriggerAggregatesService
     {

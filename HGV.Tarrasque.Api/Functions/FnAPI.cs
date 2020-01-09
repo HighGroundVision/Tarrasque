@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Net.Http;
 using HGV.Daedalus;
 using HGV.Tarrasque.Api.Services;
+using HGV.Tarrasque.Common.Models;
 
 namespace HGV.Tarrasque.Api.Functions
 {
@@ -87,6 +88,22 @@ namespace HGV.Tarrasque.Api.Functions
 
                 return new StatusCodeResult(500);
             }
+        }
+
+        [FunctionName("FnTriggerAggregates")]
+        public async Task<IActionResult> TriggerAggregates(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "aggregates/trigger")] HttpRequest req,
+            [Queue("hgv-aggregates-trigger")]IAsyncCollector<AggregateTrigger> queue,
+            ILogger log)
+        {
+            var item = new AggregateTrigger()
+            {
+                Timestamp = DateTime.UtcNow.Date,
+            };
+
+            await queue.AddAsync(item);
+
+            return new OkResult();
         }
 
 

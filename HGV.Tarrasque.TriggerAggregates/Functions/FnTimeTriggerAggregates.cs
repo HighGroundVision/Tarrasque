@@ -1,10 +1,10 @@
 using HGV.Tarrasque.Common.Models;
-using HGV.Tarrasque.TriggerAggregates.Services;
+using HGV.Tarrasque.AggregatesTrigger.Services;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace HGV.Tarrasque.TriggerAggregates
+namespace HGV.Tarrasque.AggregatesTrigger
 {
     public class FnTimeTriggerAggregates
     {

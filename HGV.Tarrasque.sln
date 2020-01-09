@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessHeroAb
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessAbility", "HGV.Tarrasque.ProcessAbility\HGV.Tarrasque.ProcessAbility.csproj", "{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.TriggerAggregates", "HGV.Tarrasque.TriggerAggregates\HGV.Tarrasque.TriggerAggregates.csproj", "{F2FDE382-92B5-400A-AD59-5F3206E54FC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregatesTrigger", "HGV.Tarrasque.TriggerAggregates\HGV.Tarrasque.AggregatesTrigger.csproj", "{F2FDE382-92B5-400A-AD59-5F3206E54FC8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateHero", "HGV.Tarrasque.AggregateHero\HGV.Tarrasque.AggregateHero.csproj", "{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}"
 EndProject

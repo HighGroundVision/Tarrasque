@@ -3,6 +3,8 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
     <Nullable>enable</Nullable>
+    <RootNamespace>HGV.Tarrasque.AggregatesTrigger</RootNamespace>
+    <AssemblyName>HGV.Tarrasque.AggregatesTrigger</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dawn.Guard" Version="1.10.0" />

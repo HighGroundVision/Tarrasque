@@ -1,10 +1,10 @@
 using HGV.Tarrasque.Common.Models;
-using HGV.Tarrasque.TriggerAggregates.Services;
+using HGV.Tarrasque.AggregatesTrigger.Services;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace HGV.Tarrasque.TriggerAggregates
+namespace HGV.Tarrasque.AggregatesTrigger
 {
     public class FnQueueTriggerAggregates
     {
@@ -17,7 +17,7 @@ namespace HGV.Tarrasque.TriggerAggregates
 
         [FunctionName("FnQueueTriggerAggregates")]
         public async Task Trigger(
-            [QueueTrigger("hgv-aggregates-trigger")]string msg,
+            [QueueTrigger("hgv-aggregates-trigger")]AggregateTrigger item,
             [Queue("hgv-aggregates-heroes")]IAsyncCollector<HeroAggregateReference> queueHeroes,
             [Queue("hgv-aggregates-hero-abilities")]IAsyncCollector<HeroAggregateReference> queueHeroAbilties,
             [Queue("hgv-aggregates-abilities")]IAsyncCollector<AbilityAggregateReference> queueAbilties,
