@@ -27,7 +27,7 @@ namespace HGV.Tarrasque.AggregateHero
             [Blob("hgv-heroes/{Region}/{Date5}/{Hero}.json")]TextReader day5,
             [Blob("hgv-heroes/{Region}/{Date6}/{Hero}.json")]TextReader day6,
             [Blob("hgv-heroes/{Region}/{Date7}/{Hero}.json")]TextReader day7,
-            [Blob("hgv-summary-heroes/{Region}/{Hero}.json")]TextWriter writer,
+            [Blob("hgv-summary-heroes/{Region}/{Hero}/stats.json")]TextWriter writer,
             ILogger log
         )
         {

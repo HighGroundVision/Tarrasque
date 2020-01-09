@@ -27,7 +27,7 @@ namespace HGV.Tarrasque.AggregateAbility
             [Blob("hgv-abilities/{Region}/{Date5}/{Ability}.json")]TextReader day5,
             [Blob("hgv-abilities/{Region}/{Date6}/{Ability}.json")]TextReader day6,
             [Blob("hgv-abilities/{Region}/{Date7}/{Ability}.json")]TextReader day7,
-            [Blob("hgv-summary-abilities/{Region}/{Ability}.json")]TextWriter writer,
+            [Blob("hgv-summary-abilities/{Region}/{Ability}/stats.json")]TextWriter writer,
             ILogger log
         )
         {

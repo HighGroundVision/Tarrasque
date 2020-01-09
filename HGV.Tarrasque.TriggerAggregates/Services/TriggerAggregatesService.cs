@@ -11,6 +11,7 @@ namespace HGV.Tarrasque.AggregatesTrigger.Services
 {
     public interface ITriggerAggregatesService
     {
+        Task QueueRegions(IAsyncCollector<RegionAggregateReference> queue);
         Task QueueHeroes(IAsyncCollector<HeroAggregateReference> queue);
         Task QueueHeroAbilities(IAsyncCollector<HeroAggregateReference> queue);
         Task QueueAbilities(IAsyncCollector<AbilityAggregateReference> queue);
@@ -28,6 +29,22 @@ namespace HGV.Tarrasque.AggregatesTrigger.Services
             _regions = client.GetRegions().Select(_ => _.Key).ToList();
             _heroes = client.GetHeroes().Select(_ => _.Id).ToList();
             _skills = client.GetSkills().Select(_ => _.Id).ToList();
+        }
+
+        public async Task QueueRegions(IAsyncCollector<RegionAggregateReference> queue)
+        {
+            var timestamp = DateTime.Today;
+
+            var item = new RegionAggregateReference();
+            item.Range.Add(timestamp.AddDays(-1).ToString("yy-MM-dd"));
+            item.Range.Add(timestamp.AddDays(-2).ToString("yy-MM-dd"));
+            item.Range.Add(timestamp.AddDays(-3).ToString("yy-MM-dd"));
+            item.Range.Add(timestamp.AddDays(-4).ToString("yy-MM-dd"));
+            item.Range.Add(timestamp.AddDays(-5).ToString("yy-MM-dd"));
+            item.Range.Add(timestamp.AddDays(-6).ToString("yy-MM-dd"));
+            item.Range.Add(timestamp.AddDays(-7).ToString("yy-MM-dd"));
+
+            await queue.AddAsync(item);
         }
 
         public async Task QueueHeroes(IAsyncCollector<HeroAggregateReference> queue)

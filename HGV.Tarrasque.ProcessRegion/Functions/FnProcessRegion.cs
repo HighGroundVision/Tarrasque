@@ -21,8 +21,8 @@ namespace HGV.Tarrasque.ProcessRegion
         [FunctionName("FnProcessRegion")]
         public async Task Process(
             [QueueTrigger("hgv-regions")]RegionReference item,
-            [Blob("hgv-regions/{Region}.json")]TextReader readerRegion,
-            [Blob("hgv-regions/{Region}.json")]TextWriter writerRegion,
+            [Blob("hgv-regions/{Region}/{Date}.json")]TextReader readerRegion,
+            [Blob("hgv-regions/{Region}/{Date}.json")]TextWriter writerRegion,
             ILogger log
         )
         {

@@ -18,12 +18,14 @@ namespace HGV.Tarrasque.AggregatesTrigger
         [FunctionName("FnQueueTriggerAggregates")]
         public async Task Trigger(
             [QueueTrigger("hgv-aggregates-trigger")]AggregateTrigger item,
+            [Queue("hgv-aggregates-regions")]IAsyncCollector<RegionAggregateReference> queueRegions,
             [Queue("hgv-aggregates-heroes")]IAsyncCollector<HeroAggregateReference> queueHeroes,
             [Queue("hgv-aggregates-hero-abilities")]IAsyncCollector<HeroAggregateReference> queueHeroAbilties,
             [Queue("hgv-aggregates-abilities")]IAsyncCollector<AbilityAggregateReference> queueAbilties,
             ILogger log
         )
         {
+            await _service.QueueRegions(queueRegions);
             await _service.QueueHeroes(queueHeroes);
             await _service.QueueHeroAbilities(queueHeroAbilties);
             await _service.QueueAbilities(queueAbilties);

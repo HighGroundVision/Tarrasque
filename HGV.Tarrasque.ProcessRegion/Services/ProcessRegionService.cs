@@ -36,7 +36,8 @@ namespace HGV.Tarrasque.ProcessRegion.Services
 
             var data = new RegionData();
             data.Id = item.Region;
-            data.Range.Add(item.Date, 1);
+            data.Date = item.Date;
+            data.Matches = 1;
 
             var output = JsonConvert.SerializeObject(data);
             await writer.WriteAsync(output);
@@ -51,10 +52,7 @@ namespace HGV.Tarrasque.ProcessRegion.Services
             var input = await reader.ReadToEndAsync();
             var data = JsonConvert.DeserializeObject<RegionData>(input);
 
-            if (data.Range.ContainsKey(regionRef.Date))
-                data.Range[regionRef.Date]++;
-            else
-                data.Range.Add(regionRef.Date, 1);
+            data.Matches++;
 
             var output = JsonConvert.SerializeObject(data);
             await writer.WriteAsync(output);

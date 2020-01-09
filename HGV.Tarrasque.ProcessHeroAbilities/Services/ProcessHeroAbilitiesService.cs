@@ -52,7 +52,7 @@ namespace HGV.Tarrasque.ProcessHeroAbilities.Services
             Guard.Argument(writer, nameof(writer)).NotNull();
 
             var input = await reader.ReadToEndAsync();
-            var data = JsonConvert.DeserializeObject<HeroData>(input);
+            var data = JsonConvert.DeserializeObject<HeroAbilityData>(input);
 
             SetData(haRef, data);
 

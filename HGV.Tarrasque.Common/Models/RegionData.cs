@@ -9,12 +9,7 @@ namespace HGV.Tarrasque.Common.Models
     public class RegionData
     {
         public int Id { get; set; }
-
-        public Dictionary<string, int> Range { get; set; }
-
-        public RegionData()
-        {
-            this.Range = new Dictionary<string, int>();
-        }
+        public string Date { get; set; }
+        public int Matches { get; set; }
     }
 }

@@ -106,61 +106,95 @@ namespace HGV.Tarrasque.Api.Functions
             return new OkResult();
         }
 
-
-        [FunctionName("FnTimeline")]
-        public async Task<IActionResult> GetTimeline(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "timelime/{id:int}")] HttpRequest req,
-            [Blob("hgv-regions/{id}.json")]TextReader reader,
+        [FunctionName("FnHeroAggregates")]
+        public async Task<IActionResult> GetHeroAggregates(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "aggregates/hero/{hero}/stats/{region}")] HttpRequest req,
+            [Blob("hgv-summary-heroes/{region}/{hero}/stats.json")]TextReader reader,
             ILogger log)
         {
             if (reader == null)
                 return new NotFoundResult();
 
-            return new OkObjectResult(
-                await reader.ReadToEndAsync()
-            );
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
         }
 
-        [FunctionName("FnHeroes")]
-        public async Task<IActionResult> GetHeroes(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "heroes/{region}/{date}")] HttpRequest req,
-            [Blob("hgv-heroes/{region}/{date}/heroes.json")]TextReader reader,
+        [FunctionName("FnHeroAbilitiesAggregates")]
+        public async Task<IActionResult> GetHeroAbilitiesAggregates(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "aggregates/hero/{hero}/abilities/{region}")] HttpRequest req,
+            [Blob("hgv-summary-heroes/{region}/{hero}/abilities.json")]TextReader reader,
             ILogger log)
         {
             if (reader == null)
                 return new NotFoundResult();
 
-            return new OkObjectResult(
-                await reader.ReadToEndAsync()
-            );
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
         }
 
-        [FunctionName("FnAbilities")]
-        public async Task<IActionResult> GetAbilities(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "abilities/{region}/{date}")] HttpRequest req,
-            [Blob("hgv-abilities/{region}/{date}/abilities.json")]TextReader reader,
+        [FunctionName("FnAbilityAggregates")]
+        public async Task<IActionResult> GetAbilityAggregates(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "aggregates/ability/{ability}/stats/{region}")] HttpRequest req,
+            [Blob("hgv-summary-abilities/{region}/{ability}/stats.json")]TextReader reader,
             ILogger log)
         {
             if (reader == null)
                 return new NotFoundResult();
 
-            return new OkObjectResult(
-                await reader.ReadToEndAsync()
-            );
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
         }
 
-        [FunctionName("FnPlayer")]
-        public async Task<IActionResult> GetPlayer(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "player/{account}")] HttpRequest req,
+        [FunctionName("FnPlayerAggregates")]
+        public async Task<IActionResult> GetPlayerAggregates(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "aggregates/player/{account}")] HttpRequest req,
             [Blob("hgv-accounts/{account}.json")]TextReader reader,
             ILogger log)
         {
             if (reader == null)
                 return new NotFoundResult();
 
-            return new OkObjectResult(
-                await reader.ReadToEndAsync()
-            );
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
+        }
+
+        [FunctionName("FnRegionCounts")]
+        public async Task<IActionResult> GetRegionCounts(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "daily/region/{region}/{date}")] HttpRequest req,
+            [Blob("hgv-regions/{region}/{date}.json")]TextReader reader,
+            ILogger log)
+        {
+            if (reader == null)
+                return new NotFoundResult();
+
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
+        }
+
+        [FunctionName("FnDailyHero")]
+        public async Task<IActionResult> GetDailyHero(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "daily/hero/{region}/{date}/{hero}")] HttpRequest req,
+            [Blob("hgv-heroes/{region}/{date}/{hero}.json")]TextReader reader,
+            ILogger log)
+        {
+            if (reader == null)
+                return new NotFoundResult();
+
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
+        }
+
+        [FunctionName("FnRawAbility")]
+        public async Task<IActionResult> GetDailyAbility(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "daily/ability/{region}/{date}/{ability}")] HttpRequest req,
+            [Blob("hgv-abilities/{region}/{date}/{ability}.json")]TextReader reader,
+            ILogger log)
+        {
+            if (reader == null)
+                return new NotFoundResult();
+
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
         }
     }
 }
