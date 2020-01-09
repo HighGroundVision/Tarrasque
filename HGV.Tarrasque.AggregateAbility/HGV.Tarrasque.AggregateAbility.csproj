@@ -1,15 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
     <Nullable>enable</Nullable>
-    <RootNamespace>HGV.Tarrasque.AggregatesTrigger</RootNamespace>
-    <AssemblyName>HGV.Tarrasque.AggregatesTrigger</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dawn.Guard" Version="1.10.0" />
-    <PackageReference Include="HGV.Basilius" Version="3.0.55" />
-    <PackageReference Include="HGV.Daedalus" Version="2.0.17" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.10" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.0.1" />
@@ -25,7 +21,7 @@
     </None>
     <None Update="local.settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>    
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 </Project>

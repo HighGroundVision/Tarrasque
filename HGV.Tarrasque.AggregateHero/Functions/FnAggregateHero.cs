@@ -2,7 +2,6 @@ using HGV.Tarrasque.AggregateHero.Services;
 using HGV.Tarrasque.Common.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
