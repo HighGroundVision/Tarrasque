@@ -27,9 +27,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregatesTri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateHero", "HGV.Tarrasque.AggregateHero\HGV.Tarrasque.AggregateHero.csproj", "{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.AggregateAbility", "HGV.Tarrasque.AggregateAbility\HGV.Tarrasque.AggregateAbility.csproj", "{E7331BDF-2AF7-4D30-8769-3ED0BDB68F91}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateAbility", "HGV.Tarrasque.AggregateAbility\HGV.Tarrasque.AggregateAbility.csproj", "{E7331BDF-2AF7-4D30-8769-3ED0BDB68F91}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.AggregateHeroAbilities", "HGV.Tarrasque.AggregateHeroAbilities\HGV.Tarrasque.AggregateHeroAbilities.csproj", "{AE90B85F-1A1B-44FE-8454-BBE7E68FBF7D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateHeroAbilities", "HGV.Tarrasque.AggregateHeroAbilities\HGV.Tarrasque.AggregateHeroAbilities.csproj", "{AE90B85F-1A1B-44FE-8454-BBE7E68FBF7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

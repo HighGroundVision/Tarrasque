@@ -2,7 +2,7 @@
   "profiles": {
     "HGV.Tarrasque.ProcessHero": {
       "commandName": "Project",
-      "commandLineArgs": "host start --port 7076"
+      "commandLineArgs": "start --port 7075"
     }
   }
 }

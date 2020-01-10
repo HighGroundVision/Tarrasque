@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HGV.Tarrasque.AggregateHeroAbilities": {
+      "commandName": "Project",
+      "commandLineArgs": "start --port 7081"
+    }
+  }
+}

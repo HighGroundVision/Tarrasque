@@ -2,7 +2,7 @@
   "profiles": {
     "HGV.Tarrasque.ProcessMatch": {
       "commandName": "Project",
-      "commandLineArgs": "host start --port 7078"
+      "commandLineArgs": "start --port 7073"
     }
   }
 }
