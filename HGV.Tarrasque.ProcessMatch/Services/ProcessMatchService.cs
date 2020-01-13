@@ -5,6 +5,8 @@ using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 using Polly;
 using System;
@@ -38,10 +40,15 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
             var match = await FetchMatch(matchRef.MatchId);
 
-            await ProcessRegion(match, binder);
-            await ProcessAccounts(match, binder);
-            await ProcessHeroes(match, binder);
-            await ProcessAbilities(match, binder);
+            var tasks = new Task[]
+            {
+                ProcessRegion(match, binder),
+                ProcessAccounts(match, binder),
+                ProcessHeroes(match, binder),
+                ProcessAbilities(match, binder),
+            };
+
+            Task.WaitAll(tasks);
         }
 
         #region Match
@@ -71,46 +78,67 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         #endregion
 
+        #region Blobs
+
+        private static async Task<T> ReadBlob<T>(IBinder binder, string path) where T : new()
+        {
+            var blob = await binder.BindAsync<CloudBlockBlob>(new BlobAttribute(path));
+            var exists = await blob.ExistsAsync();
+            if (exists == false)
+                return new T();
+
+            using (Stream stream = await blob.OpenReadAsync())
+            using (StreamReader sr = new StreamReader(stream))
+            using (JsonTextReader jtr = new JsonTextReader(sr))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                var data = ser.Deserialize<T>(jtr);
+                if (data == null)
+                    return new T();
+                else
+                    return data;
+            }
+        }
+
+        private static async Task WriteBlob<T>(IBinder binder, T obj, string path) where T : class
+        {
+            var blob = await binder.BindAsync<CloudBlockBlob>(new BlobAttribute(path));
+
+            using (Stream stream = await blob.OpenWriteAsync())
+            using (StreamWriter sw = new StreamWriter(stream))
+            using (JsonTextWriter jtw = new JsonTextWriter(sw))
+            {
+                JsonSerializer ser = new JsonSerializer();
+                ser.Serialize(jtw, obj);
+            }
+        }
+
+        #endregion
+
         #region Region
 
         private static async Task ProcessRegion(Match match, IBinder binder)
         {
-            var regionId = match.Region();
-            var date = match.GetStart().ToString("yy-MM-dd");
+            var policy = Policy
+                .Handle<Exception>()
+                .RetryForeverAsync();
 
-            var collection = await ReadRegionSummary(binder, regionId, date);
-            UpdateRegionSummary(regionId, collection);
-            await WriteRegionSummary(binder, date, collection);
-        }
+            await policy.ExecuteAsync(async () =>
+            {
+                var regionId = match.Region();
+                var date = match.GetStart().ToString("yy-MM-dd");
+                var path = $"hgv-regions/{date}/summary.json";
 
-        private static void UpdateRegionSummary(int regionId, List<RegionData> collection)
-        {
-            var item = collection.Find(_ => _.Region == regionId);
-            if (item == null)
-                collection.Add(new RegionData() { Region = regionId, Matches = 1 });
-            else
-                item.Matches++;
-        }
+                var collection = await ReadBlob<List<RegionData>>(binder, path);
 
-        private static async Task<List<RegionData>> ReadRegionSummary(IBinder binder, int regionId, string date)
-        {
-            var reader = await binder.BindAsync<TextReader>(new BlobAttribute($"hgv-regions/{date}/summary.json"));
-            if (reader == null)
-                return new List<RegionData>();
+                var item = collection.Find(_ => _.Region == regionId);
+                if (item == null)
+                    collection.Add(new RegionData() { Region = regionId, Matches = 1 });
+                else
+                    item.Matches++;
 
-            var input = await reader.ReadToEndAsync();
-            if (string.IsNullOrWhiteSpace(input))
-                return new List<RegionData>();
-
-            return JsonConvert.DeserializeObject<List<RegionData>>(input);
-        }
-
-        private static async Task WriteRegionSummary(IBinder binder, string date, List<RegionData> collection)
-        {
-            var output = JsonConvert.SerializeObject(collection);
-
-            var writer = await binder.BindAsync<TextWriter>(new BlobAttribute($"hgv-regions/{date}/summary.json"));
-            await writer.WriteAsync(output);
+                await WriteBlob(binder, collection, path);
+            });
         }
 
         #endregion
@@ -125,58 +153,22 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
             foreach (var player in match.players)
             {
-                if (player.account_id == CATCH_ALL_ACCOUNT)
+                var accountId = player.account_id;
+                if (accountId == CATCH_ALL_ACCOUNT)
                     continue;
 
-                var data = await GetAccountData(binder, player);
-                await UpdateProfileData(player, data);
-                UpdateAccountData(match, player, data);
-                await WriteAccountData(binder, player, data);
-            }
-        }
+                var policy = Policy
+                   .Handle<Exception>()
+                   .RetryForeverAsync();
 
-        private async Task UpdateProfileData(Player player, AccountData data)
-        {
-            var profile = await GetProfile(player.SteamId());
-            data.AccountId = player.account_id;
-            data.SteamId = profile.steamid;
-            data.Persona = profile.personaname;
-            data.Avatar = profile.avatar;
-        }
-
-        private async Task<AccountData> GetAccountData(IBinder binder, Player player)
-        {
-            var reader = await binder.BindAsync<TextReader>(new BlobAttribute($"hgv-accounts/{player.account_id}/data.json"));
-            if (reader == null)
-                return new AccountData();
-
-            var input = await reader.ReadToEndAsync();
-            if (string.IsNullOrWhiteSpace(input))
-                return new AccountData();
-
-            return JsonConvert.DeserializeObject<AccountData>(input);
-        }
-
-        private async Task<HGV.Daedalus.GetPlayerSummaries.Player> GetProfile(ulong steamId)
-        {
-            Guard.Argument(steamId, nameof(steamId)).Positive().NotZero();
-
-            var policy = Policy
-                .Handle<Exception>()
-                .WaitAndRetryAsync(new[]
+                await policy.ExecuteAsync(async () =>
                 {
-                    TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(10),
-                    TimeSpan.FromSeconds(30),
-                    TimeSpan.FromSeconds(30),
+                    var path = $"hgv-accounts/{accountId}/data.json";
+                    var data = await ReadBlob<AccountData>(binder, path);
+                    UpdateAccountData(match, player, data);
+                    await WriteBlob(binder, data, path);
                 });
-
-            var player = await policy.ExecuteAsync<HGV.Daedalus.GetPlayerSummaries.Player>(async () =>
-            {
-                return await this.apiClient.GetPlayerSummary(steamId);
-            });
-
-            return player;
+            }
         }
 
         private static void UpdateAccountData(Match match, Player player, AccountData data)
@@ -186,6 +178,10 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
             var hero = player.GetHero();
             var skills = player.GetSkills();
+
+            data.AccountId = player.account_id;
+            data.SteamId = player.SteamId();
+            data.Persona = player.persona;
 
             data.Timeline.Add(new MatchTimestamp()
             {
@@ -238,14 +234,6 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 .ToList();
         }
 
-        private static async Task WriteAccountData(IBinder binder, Player player, AccountData data)
-        {
-            var output = JsonConvert.SerializeObject(data);
-
-            var writer = await binder.BindAsync<TextWriter>(new BlobAttribute($"hgv-accounts/{player.account_id}/data.json"));
-            await writer.WriteAsync(output);
-        }
-
         #endregion
 
         #region Heroes
@@ -256,24 +244,43 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             Guard.Argument(binder, nameof(binder)).NotNull();
 
             var date = match.GetStart().ToString("yy-MM-dd");
-
-            foreach (var player in match.players)
-            {
-                var heroId = player.hero_id;
-                var item = InitializeHeroData(match, player);
-                var data = await GetExistingHeroData(binder, date, heroId);
-                item += data;
-                await WriteHeroData(binder, date, heroId, item);
-            }
-        }
-      
-        private static HeroData InitializeHeroData(Match match, Player player)
-        {
             var maxAssists = match.players.Max(_ => _.assists);
             var maxGold = match.players.Max(_ => _.gold);
             var maxKills = match.players.Max(_ => _.kills);
             var minDeaths = match.players.Min(_ => _.deaths);
 
+            foreach (var player in match.players)
+            {
+                var heroId = player.hero_id;
+                var path = $"hgv-heroes/{date}/{heroId}/data.json";
+
+                var policy = Policy
+                   .Handle<Exception>()
+                   .RetryForeverAsync();
+
+                await policy.ExecuteAsync(async () =>
+                {
+                    var item = InitializeHeroData(match, player, maxAssists, maxGold, maxKills, minDeaths);
+                    var data = await ReadBlob<HeroData>(binder, path);
+                    UpdateHeroData(item, data);
+                    await WriteBlob(binder, item, path);
+                });
+            }
+        }
+
+        private static void UpdateHeroData(HeroData item, HeroData data)
+        {
+            item.Total += data.Total;
+            item.Wins += data.Wins;
+            item.Losses += data.Losses;
+            item.DraftOrder += data.DraftOrder;
+            item.MaxAssists += data.MaxAssists;
+            item.MaxKills += data.MaxKills;
+            item.MinDeaths += data.MinDeaths;
+        }
+
+        private static HeroData InitializeHeroData(Match match, Player player, int maxAssists, int maxGold, int maxKills, int minDeaths)
+        {
             var item = new HeroData();
             item.Total = 1;
             item.DraftOrder = player.DraftOrder();
@@ -298,31 +305,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             return item;
         }
 
-        private static async Task<HeroData> GetExistingHeroData(IBinder binder, string date, int heroId)
-        {
-            var policy = Policy
-             .Handle<Exception>()
-             .WaitAndRetryAsync(3, n => TimeSpan.FromSeconds(1));
-
-            var reader = await binder.BindAsync<TextReader>(new BlobAttribute($"hgv-heroes/{date}/{heroId}/data.json"));
-            if (reader == null)
-                return new HeroData();
-
-            var input = await reader.ReadToEndAsync();
-            if (string.IsNullOrWhiteSpace(input))
-                return new HeroData();
-
-            return JsonConvert.DeserializeObject<HeroData>(input);
-        }
-
-        private static async Task WriteHeroData(IBinder binder, string date, int heroId, HeroData item)
-        {
-            var output = JsonConvert.SerializeObject(item);
-
-            var writer = await binder.BindAsync<TextWriter>(new BlobAttribute($"hgv-heroes/{date}/{heroId}/data.json"));
-            await writer.WriteAsync(output);
-        }
-
+  
         #endregion
 
         #region Abilities
@@ -333,6 +316,10 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             Guard.Argument(binder, nameof(binder)).NotNull();
 
             var date = match.GetStart().ToString("yy-MM-dd");
+            var maxAssists = match.players.Max(_ => _.assists);
+            var maxGold = match.players.Max(_ => _.gold);
+            var maxKills = match.players.Max(_ => _.kills);
+            var minDeaths = match.players.Min(_ => _.deaths);
 
             foreach (var player in match.players)
             {
@@ -340,21 +327,37 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 foreach (var skill in skills)
                 {
                     var abilityId = skill.Id;
-                    var item = InitializeAbilityData(match, player, skill);
-                    var data = await GetExistingAbilityData(binder, date, abilityId);
-                    item += data;
-                    await WriteAbilityData(binder, date, abilityId, item);
+                    var path = $"hgv-abilities/{date}/{abilityId}/data.json";
+
+                    var policy = Policy
+                      .Handle<Exception>()
+                      .RetryForeverAsync();
+
+                    await policy.ExecuteAsync(async () =>
+                    {
+                        var item = InitializeAbilityData(match, player, skill, maxAssists, maxGold, maxKills, minDeaths);
+                        var data = await ReadBlob<AbilityData>(binder, path);
+                        UpdateAbilityData(item, data);
+                        await WriteBlob(binder, item, path);
+                    });
                 }
             }
         }
 
-        private static AbilityData InitializeAbilityData(Match match, Player player, Ability skill)
+        private static void UpdateAbilityData(AbilityData item, AbilityData data)
         {
-            var maxAssists = match.players.Max(_ => _.assists);
-            var maxGold = match.players.Max(_ => _.gold);
-            var maxKills = match.players.Max(_ => _.kills);
-            var minDeaths = match.players.Min(_ => _.deaths);
+            item.Total += data.Total;
+            item.Wins += data.Wins;
+            item.Losses += data.Losses;
+            item.DraftOrder += data.DraftOrder;
+            item.MaxAssists += data.MaxAssists;
+            item.MaxKills += data.MaxKills;
+            item.MinDeaths += data.MinDeaths;
+            item.HeroAbility += data.HeroAbility;
+        }
 
+        private static AbilityData InitializeAbilityData(Match match, Player player, Ability skill, int maxAssists, int maxGold, int maxKills, int minDeaths)
+        {
             var item = new AbilityData();
             item.Total = 1;
             item.DraftOrder = player.DraftOrder();
@@ -377,27 +380,6 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             if (player.deaths == minDeaths)
                 item.MinDeaths++;
             return item;
-        }
-
-        private static async Task<AbilityData> GetExistingAbilityData(IBinder binder, string date, int abilityId)
-        {
-            var reader = await binder.BindAsync<TextReader>(new BlobAttribute($"hgv-abilities/{date}/{abilityId}/data.json"));
-            if (reader == null)
-                return new AbilityData();
-
-            var input = await reader.ReadToEndAsync();
-            if (input == null)
-                return new AbilityData();
-
-            return JsonConvert.DeserializeObject<AbilityData>(input);
-        }
-
-        private static async Task WriteAbilityData(IBinder binder, string date, int abilityId, AbilityData item)
-        {
-            var output = JsonConvert.SerializeObject(item);
-
-            var writer = await binder.BindAsync<TextWriter>(new BlobAttribute($"hgv-abilities/{date}/{abilityId}/data.json"));
-            await writer.WriteAsync(output);
         }
 
         #endregion

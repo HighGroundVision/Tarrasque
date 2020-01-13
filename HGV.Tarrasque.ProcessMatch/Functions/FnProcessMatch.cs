@@ -23,12 +23,7 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
             IBinder binder,
             ILogger log)
         {
-            var start = DateTime.UtcNow;
-
             await _service.ProcessMatch(item, binder);
-
-            var delta = DateTime.UtcNow - start;
-            log.LogInformation($"Processed In {delta.TotalSeconds}");
         }
     }
 }
