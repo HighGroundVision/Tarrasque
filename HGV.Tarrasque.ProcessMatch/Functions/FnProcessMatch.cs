@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Threading.Tasks;
+using System;
 
 namespace HGV.Tarrasque.ProcessMatch.Functions
 {
@@ -22,9 +23,12 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
             IBinder binder,
             ILogger log)
         {
-            var match = await _service.FetchMatch(item.MatchId);
+            var start = DateTime.UtcNow;
 
-            await _service.ProcessMatch(match, binder);
+            await _service.ProcessMatch(item, binder);
+
+            var delta = DateTime.UtcNow - start;
+            log.LogInformation($"Processed In {delta.TotalSeconds}");
         }
     }
 }

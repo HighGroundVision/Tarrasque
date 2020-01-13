@@ -46,8 +46,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
                 .Where(_ => _.GetDuration().TotalMinutes > 15)
                 .ToList();
 
-            checkpoint.Split.Min = DateTimeOffset.UtcNow - matches.Min(_ => _.GetStart());
-            checkpoint.Split.Max = DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd());
+            checkpoint.Split =  DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd());
             checkpoint.Latest = matches.Max(_ => _.match_seq_num);
 
             history.TotalMatches += matches.Count;

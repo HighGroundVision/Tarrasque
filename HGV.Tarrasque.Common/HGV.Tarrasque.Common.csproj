@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\AbilityReference.cs" />
+    <Compile Remove="Models\AccountReference.cs" />
+    <Compile Remove="Models\AggregateReference.cs" />
+    <Compile Remove="Models\HeroAbilityData.cs" />
+    <Compile Remove="Models\HeroAbilityReference.cs" />
     <Compile Remove="Models\HeroReference.cs" />
     <Compile Remove="Models\RegionAggregateReference.cs" />
     <Compile Remove="Models\RegionReference.cs" />
