@@ -5,31 +5,11 @@ VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Common", "HGV.Tarrasque.Common\HGV.Tarrasque.Common.csproj", "{A493FF01-0475-4353-9F5C-43F211A78109}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessCheckpoint", "HGV.Tarrasque.ProcessCheckpoint\HGV.Tarrasque.ProcessCheckpoint.csproj", "{AD1292DE-AE53-4B7E-BD57-134BC9F6A51D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessMatch", "HGV.Tarrasque.ProcessMatch\HGV.Tarrasque.ProcessMatch.csproj", "{B096C783-2853-4167-AB66-B344592C72D9}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessAccount", "HGV.Tarrasque.ProcessAccount\HGV.Tarrasque.ProcessAccount.csproj", "{5969E96A-B3C8-46B2-873F-7B14E17C3C87}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Api", "HGV.Tarrasque.Api\HGV.Tarrasque.Api.csproj", "{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.StoreMatch", "HGV.Tarrasque.StoreMatch\HGV.Tarrasque.StoreMatch.csproj", "{40A23675-7B6E-41B4-B402-E70B1007C086}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessRegion", "HGV.Tarrasque.ProcessRegion\HGV.Tarrasque.ProcessRegion.csproj", "{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessHero", "HGV.Tarrasque.ProcessHero\HGV.Tarrasque.ProcessHero.csproj", "{5F82F04C-8DDD-4FE7-B449-22382161C85E}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessHeroAbilities", "HGV.Tarrasque.ProcessHeroAbilities\HGV.Tarrasque.ProcessHeroAbilities.csproj", "{85153858-FE07-4ACA-A3A9-7E43E7F58783}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessAbility", "HGV.Tarrasque.ProcessAbility\HGV.Tarrasque.ProcessAbility.csproj", "{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregatesTrigger", "HGV.Tarrasque.TriggerAggregates\HGV.Tarrasque.AggregatesTrigger.csproj", "{F2FDE382-92B5-400A-AD59-5F3206E54FC8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateHero", "HGV.Tarrasque.AggregateHero\HGV.Tarrasque.AggregateHero.csproj", "{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateAbility", "HGV.Tarrasque.AggregateAbility\HGV.Tarrasque.AggregateAbility.csproj", "{E7331BDF-2AF7-4D30-8769-3ED0BDB68F91}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.AggregateHeroAbilities", "HGV.Tarrasque.AggregateHeroAbilities\HGV.Tarrasque.AggregateHeroAbilities.csproj", "{AE90B85F-1A1B-44FE-8454-BBE7E68FBF7D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessCheckpoint", "HGV.Tarrasque.ProcessCheckpoint\HGV.Tarrasque.ProcessCheckpoint.csproj", "{DF032007-3314-485F-AAED-C510ED514247}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,58 +21,18 @@ Global
 		{A493FF01-0475-4353-9F5C-43F211A78109}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A493FF01-0475-4353-9F5C-43F211A78109}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A493FF01-0475-4353-9F5C-43F211A78109}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AD1292DE-AE53-4B7E-BD57-134BC9F6A51D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AD1292DE-AE53-4B7E-BD57-134BC9F6A51D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AD1292DE-AE53-4B7E-BD57-134BC9F6A51D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AD1292DE-AE53-4B7E-BD57-134BC9F6A51D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B096C783-2853-4167-AB66-B344592C72D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B096C783-2853-4167-AB66-B344592C72D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B096C783-2853-4167-AB66-B344592C72D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B096C783-2853-4167-AB66-B344592C72D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5969E96A-B3C8-46B2-873F-7B14E17C3C87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5969E96A-B3C8-46B2-873F-7B14E17C3C87}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5969E96A-B3C8-46B2-873F-7B14E17C3C87}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5969E96A-B3C8-46B2-873F-7B14E17C3C87}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{40A23675-7B6E-41B4-B402-E70B1007C086}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{40A23675-7B6E-41B4-B402-E70B1007C086}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{40A23675-7B6E-41B4-B402-E70B1007C086}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{40A23675-7B6E-41B4-B402-E70B1007C086}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F64F43D-7392-4C1B-AB6C-75121F04BCBC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5F82F04C-8DDD-4FE7-B449-22382161C85E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F82F04C-8DDD-4FE7-B449-22382161C85E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5F82F04C-8DDD-4FE7-B449-22382161C85E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5F82F04C-8DDD-4FE7-B449-22382161C85E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{85153858-FE07-4ACA-A3A9-7E43E7F58783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{85153858-FE07-4ACA-A3A9-7E43E7F58783}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{85153858-FE07-4ACA-A3A9-7E43E7F58783}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{85153858-FE07-4ACA-A3A9-7E43E7F58783}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9DAFDEE5-0718-402D-9FA4-F4D5FF691336}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F2FDE382-92B5-400A-AD59-5F3206E54FC8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{33D2CE15-C4CD-42FF-9306-F82C4D7DA328}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E7331BDF-2AF7-4D30-8769-3ED0BDB68F91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7331BDF-2AF7-4D30-8769-3ED0BDB68F91}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E7331BDF-2AF7-4D30-8769-3ED0BDB68F91}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E7331BDF-2AF7-4D30-8769-3ED0BDB68F91}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AE90B85F-1A1B-44FE-8454-BBE7E68FBF7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AE90B85F-1A1B-44FE-8454-BBE7E68FBF7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AE90B85F-1A1B-44FE-8454-BBE7E68FBF7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AE90B85F-1A1B-44FE-8454-BBE7E68FBF7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF032007-3314-485F-AAED-C510ED514247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF032007-3314-485F-AAED-C510ED514247}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF032007-3314-485F-AAED-C510ED514247}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF032007-3314-485F-AAED-C510ED514247}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

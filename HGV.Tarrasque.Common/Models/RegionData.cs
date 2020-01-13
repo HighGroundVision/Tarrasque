@@ -8,8 +8,7 @@ namespace HGV.Tarrasque.Common.Models
 {
     public class RegionData
     {
-        public int Id { get; set; }
-        public string Date { get; set; }
+        public int Region { get; set; }
         public int Matches { get; set; }
     }
 }

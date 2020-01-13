@@ -58,9 +58,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
                     history.AddHistory(item.match_id);
 
                     var data = new MatchReference();
-                    data.Match = item.match_id;
-                    data.Date = item.GetStart().ToString("yy-MM-dd");
-                    data.Region = item.GetRegion();
+                    data.MatchId = item.match_id;
 
                     await queue.AddAsync(data);
                 }

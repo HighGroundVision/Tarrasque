@@ -8,11 +8,6 @@ namespace HGV.Tarrasque.Common.Models
 {
     public class HeroReference
     {
-        public ulong Match { get; set; }
-        public string Date { get; set; }
-        public int Region { get; set; }
-        public int Hero { get; set; }
-
         public int DraftOrder { get; set; }
         public int Wins { get; set; }
         public int Losses { get; set; }

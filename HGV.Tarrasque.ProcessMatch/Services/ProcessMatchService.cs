@@ -17,56 +17,94 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 {
     public interface IProcessMatchService
     {
-        Task<Match> ReadMatch(TextReader reader);
+        Task<Match> FetchMatch(ulong match);
 
-        Task QueueRegions(Match match, IAsyncCollector<RegionReference> queue);
-        Task QueueHeroes(Match match, IAsyncCollector<HeroReference> queue);
-        Task QueueHeroAbilities(Match match, IAsyncCollector<HeroAbilityReference> queue);
-        Task QueueAbilities(Match match, IAsyncCollector<AbilityReference> queue);
-        Task QueueAccounts(Match match, IAsyncCollector<AccountReference> queue);
+        Task ProcessMatch(Match match, IBinder binder);
     }
 
     public class ProcessMatchService : IProcessMatchService
     {
         private readonly IDotaApiClient apiClient;
         private readonly MetaClient metaClient;
-        private readonly List<Ability> skills;
 
         public ProcessMatchService(IDotaApiClient client)
         {
             this.apiClient = client;
             this.metaClient = MetaClient.Instance.Value;
-            this.skills = this.metaClient.GetSkills();
         }
 
-        public async Task<Match> ReadMatch(TextReader reader)
+        public async Task<Match> FetchMatch(ulong matchId)
         {
-            Guard.Argument(reader, nameof(reader)).NotNull();
+            Guard.Argument(matchId, nameof(matchId)).Positive().NotZero();
 
-            var input = await reader.ReadToEndAsync();
-            var match = JsonConvert.DeserializeObject<Match>(input);
+            var policy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(new[]
+                {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(10),
+                    TimeSpan.FromSeconds(30),
+                    TimeSpan.FromSeconds(30),
+                });
+
+            var match = await policy.ExecuteAsync<Match>(async () =>
+            {
+                var details = await this.apiClient.GetMatchDetails(matchId);
+                return details;
+            });
+
             return match;
         }
 
-        public async Task QueueRegions(Match match, IAsyncCollector<RegionReference> queue)
+        public async Task ProcessMatch(Match match, IBinder binder)
         {
             Guard.Argument(match, nameof(match)).NotNull();
-            Guard.Argument(queue, nameof(queue)).NotNull();
-
-            var data = new RegionReference()
-            {
-                Match = match.match_id,
-                Region = match.GetRegion(),
-                Date = match.GetStart().ToString("yy-MM-dd")
-            };
-
-            await queue.AddAsync(data);
+            Guard.Argument(binder, nameof(binder)).NotNull();
+            
+            await ProcessRegion(match, binder);
+            await ProcessHero(match, binder);
         }
 
-        public async Task QueueHeroes(Match match, IAsyncCollector<HeroReference> queue)
+        #region Region
+
+        private async Task ProcessRegion(Match match, IBinder binder)
+        {
+            var regionId = match.GetRegion();
+            var date = match.GetStart().ToString("yy-MM-dd");
+            var reader = await binder.BindAsync<TextReader>(new BlobAttribute($"hgv-regions/{date}/summary.json"));
+
+            var collection = new List<RegionData>();
+            if (reader != null)
+            {
+                var input = await reader.ReadToEndAsync();
+                collection = JsonConvert.DeserializeObject<List<RegionData>>(input);
+            }
+
+            var item = collection.Find(_ => _.Region == regionId);
+            if (item == null)
+            {
+                collection.Add(new RegionData() { Region = regionId, Matches = 1 });
+            }
+            else
+            {
+                item.Matches++;
+            }
+
+            var writer = await binder.BindAsync<TextWriter>(new BlobAttribute($"hgv-regions/{date}/summary.json"));
+            var output = JsonConvert.SerializeObject(collection);
+            await writer.WriteAsync(output);
+        }
+
+        #endregion
+
+        #region Hero
+
+        public async Task ProcessHero(Match match, IBinder binder)
         {
             Guard.Argument(match, nameof(match)).NotNull();
-            Guard.Argument(queue, nameof(queue)).NotNull();
+            Guard.Argument(binder, nameof(binder)).NotNull();
+
+            var date = match.GetStart().ToString("yy-MM-dd");
 
             var maxAssists = match.players.Max(_ => _.assists);
             var maxGold = match.players.Max(_ => _.gold);
@@ -75,12 +113,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
             foreach (var player in match.players)
             {
-                var item = new HeroReference();
-                item.Match = match.match_id;
-                item.Date = match.GetStart().ToString("yy-MM-dd");
-                item.Region = match.GetRegion();
-                item.Hero = player.hero_id;
-
+                var item = new HeroData();
+                item.Total = 1;
                 item.DraftOrder = player.DraftOrder();
 
                 if (match.Victory(player))
@@ -100,141 +134,20 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 if (player.deaths == minDeaths)
                     item.MinDeaths++;
 
-                await queue.AddAsync(item);
-            }
-        }
-
-        public async Task QueueHeroAbilities(Match match, IAsyncCollector<HeroAbilityReference> queue)
-        {
-            Guard.Argument(match, nameof(match)).NotNull();
-            Guard.Argument(queue, nameof(queue)).NotNull();
-
-            var maxAssists = match.players.Max(_ => _.assists);
-            var maxGold = match.players.Max(_ => _.gold);
-            var maxKills = match.players.Max(_ => _.kills);
-            var minDeaths = match.players.Min(_ => _.deaths);
-
-            foreach (var player in match.players)
-            {
-                var abilities = player.ability_upgrades
-                    .Select(_ => _.ability)
-                    .Distinct()
-                    .Join(this.skills, _ => _, _ => _.Id, (lhs, rhs) => rhs)
-                    .ToList();
-
-                foreach (var ability in abilities)
+                var reader = await binder.BindAsync<TextReader>(new BlobAttribute($"hgv-heroes/{date}/{player.hero_id}/data.json"));
+                if (reader != null)
                 {
-                    var item = new HeroAbilityReference();
-                    item.Match = match.match_id;
-                    item.Date = match.GetStart().ToString("yy-MM-dd");
-                    item.Region = match.GetRegion();
-                    item.Hero = player.hero_id;
-                    item.Ability = ability.Id;
-
-                    item.DraftOrder = player.DraftOrder();
-
-                    if (match.Victory(player))
-                        item.Wins++;
-                    else
-                        item.Losses++;
-
-                    if (player.assists == maxAssists)
-                        item.MaxAssists++;
-
-                    if (player.gold == maxGold)
-                        item.MaxGold++;
-
-                    if (player.kills == maxKills)
-                        item.MaxKills++;
-
-                    if (player.deaths == minDeaths)
-                        item.MinDeaths++;
-
-                    await queue.AddAsync(item);
+                    var input = await reader.ReadToEndAsync();
+                    var data = JsonConvert.DeserializeObject<HeroData>(input);
+                    item += data;
                 }
+
+                var output = JsonConvert.SerializeObject(item);
+                var writer = await binder.BindAsync<TextWriter>(new BlobAttribute($"hgv-heroes/{date}/{player.hero_id}/data.json"));
+                await writer.WriteAsync(output);
             }
         }
 
-        public async Task QueueAbilities(Match match, IAsyncCollector<AbilityReference> queue)
-        {
-            Guard.Argument(match, nameof(match)).NotNull();
-            Guard.Argument(queue, nameof(queue)).NotNull();
-
-            var maxAssists = match.players.Max(_ => _.assists);
-            var maxGold = match.players.Max(_ => _.gold);
-            var maxKills = match.players.Max(_ => _.kills);
-            var minDeaths = match.players.Min(_ => _.deaths);
-
-            foreach (var player in match.players)
-            {
-                var abilities = player.ability_upgrades
-                    .Select(_ => _.ability)
-                    .Distinct()
-                    .Join(this.skills, _ => _, _ => _.Id, (lhs, rhs) => rhs)
-                    .ToList();
-
-                foreach (var ability in abilities)
-                {
-                    var item = new AbilityReference();
-                    item.Match = match.match_id;
-                    item.Date = match.GetStart().ToString("yy-MM-dd");
-                    item.Region = match.GetRegion();
-                    item.Ability = ability.Id;
-
-                    item.DraftOrder = player.DraftOrder();
-
-                    if (match.Victory(player))
-                        item.Wins++;
-                    else
-                        item.Losses++;
-
-                    if (ability.HeroId == player.hero_id)
-                        item.HeroAbility++;
-
-                    if (player.assists == maxAssists)
-                        item.MaxAssists++;
-
-                    if (player.gold == maxGold)
-                        item.MaxGold++;
-
-                    if (player.kills == maxKills)
-                        item.MaxKills++;
-
-                    if (player.deaths == minDeaths)
-                        item.MinDeaths++;
-
-                    await queue.AddAsync(item);
-                }
-            }
-
-        }
-
-        private const long CATCH_ALL_ACCOUNT = 4294967295;
-        public async Task QueueAccounts(Match match, IAsyncCollector<AccountReference> queue)
-        {
-            Guard.Argument(match, nameof(match)).NotNull();
-            Guard.Argument(queue, nameof(queue)).NotNull();
-
-            var players = match.players.Where(_ => _.account_id != CATCH_ALL_ACCOUNT).ToList();
-            foreach (var player in players)
-            {
-                var abilities = player.ability_upgrades
-                    .Select(_ => _.ability)
-                    .Distinct()
-                    .Join(skills, _ => _, _ => _.Id, (lhs, rhs) => lhs)
-                    .ToList();
-
-                var item = new AccountReference();
-                item.Match = match.match_id;
-                item.Account = player.account_id;
-                item.Victory = match.Victory(player);
-                item.Hero = player.hero_id;
-                item.Abilities = abilities;
-
-                await queue.AddAsync(item);
-            }
-        }
-
-        
+        #endregion
     }
 }
