@@ -45,7 +45,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 ProcessRegion(match, binder),
                 ProcessAccounts(match, binder),
                 ProcessHeroes(match, binder),
-                ProcessAbilities(match, binder),
+                // ProcessAbilities(match, binder),
             };
 
             Task.WaitAll(tasks);
