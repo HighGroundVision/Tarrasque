@@ -5,7 +5,6 @@ using System.Text;
 
 namespace HGV.Tarrasque.Common.Models
 {
-
     public class WinRateData
     {
         public int Total { get; set; }

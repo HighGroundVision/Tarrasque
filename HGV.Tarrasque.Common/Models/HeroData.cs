@@ -6,7 +6,7 @@ using System.Text;
 
 namespace HGV.Tarrasque.Common.Models
 {
-    public struct HeroData
+    public class HeroData
     {
         public int Total { get; set; }
         public int Wins { get; set; }
