@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Polly;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 ProcessRegion(match, binder),
                 ProcessAccounts(match, binder),
                 ProcessHeroes(match, binder),
-                // ProcessAbilities(match, binder),
+                ProcessAbilities(match, binder),
             };
 
             Task.WaitAll(tasks);
@@ -120,8 +121,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
         private static async Task ProcessRegion(Match match, IBinder binder)
         {
             var policy = Policy
-                .Handle<Exception>()
-                .RetryForeverAsync();
+                       .Handle<Exception>()
+                       .RetryAsync(5);
 
             await policy.ExecuteAsync(async () =>
             {
@@ -158,8 +159,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                     continue;
 
                 var policy = Policy
-                   .Handle<Exception>()
-                   .RetryForeverAsync();
+                       .Handle<Exception>()
+                       .RetryAsync(5);
 
                 await policy.ExecuteAsync(async () =>
                 {
@@ -255,8 +256,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var path = $"hgv-heroes/{date}/{heroId}/data.json";
 
                 var policy = Policy
-                   .Handle<Exception>()
-                   .RetryForeverAsync();
+                       .Handle<Exception>()
+                       .RetryAsync(5);
 
                 await policy.ExecuteAsync(async () =>
                 {
@@ -330,8 +331,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                     var path = $"hgv-abilities/{date}/{abilityId}/data.json";
 
                     var policy = Policy
-                      .Handle<Exception>()
-                      .RetryForeverAsync();
+                       .Handle<Exception>()
+                       .RetryAsync(5);
 
                     await policy.ExecuteAsync(async () =>
                     {
