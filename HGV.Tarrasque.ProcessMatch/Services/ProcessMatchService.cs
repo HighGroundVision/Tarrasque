@@ -5,6 +5,7 @@ using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
@@ -15,12 +16,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using HGV.Tarrasque.ProcessMatch.Entities;
 
 namespace HGV.Tarrasque.ProcessMatch.Services
 {
     public interface IProcessMatchService
     {
-        Task ProcessMatch(MatchReference matchRef, IBinder binder);
+        Task ProcessMatch(MatchReference matchRef, IDurableEntityClient client);
     }
 
     public class ProcessMatchService : IProcessMatchService
@@ -34,13 +36,27 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             this.metaClient = MetaClient.Instance.Value;
         }
 
-        public async Task ProcessMatch(MatchReference matchRef, IBinder binder)
+        public async Task ProcessMatch(MatchReference matchRef, IDurableEntityClient client)
         {
             Guard.Argument(matchRef, nameof(matchRef)).NotNull().Member(_ => _.MatchId, _ => _.NotZero());
-            Guard.Argument(binder, nameof(binder)).NotNull();
+            Guard.Argument(client, nameof(client)).NotNull();
 
             var match = await FetchMatch(matchRef.MatchId);
 
+            {
+                var entityId = new EntityId(nameof(MatchCounter), match.game_mode.ToString());
+                await client.SignalEntityAsync<ICounter>(entityId, proxy => proxy.Add(1));
+            }
+
+            foreach (var player in match.players)
+            {
+                var entityId = new EntityId(nameof(HeroCounter), player.hero_id.ToString());
+
+                if (match.Victory(player))
+                    await client.SignalEntityAsync<IHeroCounter>(entityId, proxy => proxy.AddWin());
+                else
+                    await client.SignalEntityAsync<IHeroCounter>(entityId, proxy => proxy.AddLoss());
+            }
         }
 
         #region Match

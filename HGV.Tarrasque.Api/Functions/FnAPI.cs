@@ -184,7 +184,7 @@ namespace HGV.Tarrasque.Api.Functions
             return new OkObjectResult(json);
         }
 
-        [FunctionName("FnRawAbility")]
+        [FunctionName("FnDailyAbility")]
         public async Task<IActionResult> GetDailyAbility(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "daily/ability/{region}/{date}/{ability}")] HttpRequest req,
             [Blob("hgv-abilities/{region}/{date}/{ability}.json")]TextReader reader,

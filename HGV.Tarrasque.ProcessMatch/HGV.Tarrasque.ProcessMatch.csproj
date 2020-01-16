@@ -9,6 +9,7 @@
     <PackageReference Include="HGV.Basilius" Version="3.0.55" />
     <PackageReference Include="HGV.Daedalus" Version="2.0.17" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.1.1" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.10" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.0.1" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.2" />
