@@ -34,6 +34,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             this.metaClient = MetaClient.Instance.Value;
         }
 
+        // Replace with durable functions
+        // https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-dotnet-entities#accessing-entities-through-interfaces
         public async Task ProcessMatch(MatchReference matchRef, IBinder binder)
         {
             Guard.Argument(matchRef, nameof(matchRef)).NotNull().Member(_ => _.MatchId, _ => _.NotZero());
