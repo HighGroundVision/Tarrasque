@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "HGV.Tarrasque.AggregatesTrigger": {
-      "commandName": "Project",
-      "commandLineArgs": "start --port 7080"
-    }
-  }
-}

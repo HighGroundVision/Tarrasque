@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "HGV.Tarrasque.ProcessHeroAbilities": {
-      "commandName": "Project",
-      "commandLineArgs": "start --port 7074"
-    }
-  }
-}

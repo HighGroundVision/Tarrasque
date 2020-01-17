@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "HGV.Tarrasque.ProcessMatch": {
-      "commandName": "Project",
-      "commandLineArgs": "start --port 7073"
-    }
-  }
-}

@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Common", "HGV
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessMatch", "HGV.Tarrasque.ProcessMatch\HGV.Tarrasque.ProcessMatch.csproj", "{B096C783-2853-4167-AB66-B344592C72D9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Api", "HGV.Tarrasque.Api\HGV.Tarrasque.Api.csproj", "{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessCheckpoint", "HGV.Tarrasque.ProcessCheckpoint\HGV.Tarrasque.ProcessCheckpoint.csproj", "{DF032007-3314-485F-AAED-C510ED514247}"
 EndProject
 Global
@@ -25,10 +23,6 @@ Global
 		{B096C783-2853-4167-AB66-B344592C72D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B096C783-2853-4167-AB66-B344592C72D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B096C783-2853-4167-AB66-B344592C72D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EA1705BF-0358-4E9E-8D94-10866D9D5BCA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF032007-3314-485F-AAED-C510ED514247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DF032007-3314-485F-AAED-C510ED514247}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF032007-3314-485F-AAED-C510ED514247}.Release|Any CPU.ActiveCfg = Release|Any CPU
