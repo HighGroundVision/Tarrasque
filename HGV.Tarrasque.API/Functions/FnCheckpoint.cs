@@ -1,3 +1,5 @@
+using DurableTask.Core;
+using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.API.Entities;
 using HGV.Tarrasque.API.Models;
 using HGV.Tarrasque.API.Services;
@@ -7,8 +9,11 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Blob;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -24,69 +29,50 @@ namespace HGV.Tarrasque.API.Functions
         {
             _service = service;
         }
-
-        [FunctionName("FnRunCheckpoint")]
-        public async Task RunCheckpoint([OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            var checkpoint = context.GetInput<Checkpoint>();
-
-            await context.CallActivityAsync("FnProcessCheckpoint", checkpoint);
-
-            DateTime next = context.CurrentUtcDateTime.AddSeconds(1);
-            await context.CreateTimer(next, CancellationToken.None);
-
-            context.ContinueAsNew(checkpoint);
-        }
-
-        [FunctionName("FnProcessCheckpoint")]
-        public async Task ProcessCheckpoint(
-            [ActivityTrigger] Checkpoint checkpoint,
+        
+        [FunctionName("FnCheckpoint")]
+        public async Task Checkpoint(
+            [BlobTrigger("hgv-checkpoint/master.json")]Checkpoint checkpoint,
+            [Blob("hgv-checkpoint/master.json")]TextWriter writer,
+            [Queue("hgv-ad-matches")]IAsyncCollector<Match> queue,
             [DurableClient] IDurableEntityClient fnClient,
-            [Queue("hgv-ad-matches")]IAsyncCollector<MatchReference> queue,
-            ILogger log
-        )
-        {
-            var collection = await _service.GetMatches(checkpoint, log);
-
-            var modes = collection.GroupBy(_ => _.game_mode).Select(_ => new { Mode = _.Key, Matches = _.Count() }).ToList();
-            foreach (var item in modes)
-            {
-                var entityId = new EntityId(nameof(MatchCounter), item.Mode.ToString());
-                await fnClient.SignalEntityAsync<IMatchesCounter>(entityId, proxy => proxy.Add(item.Matches));
-            }
-
-            foreach (var item in collection)
-            {
-                if(item.game_mode == 18)
-                {
-                    await queue.AddAsync(new MatchReference() { MatchId = item.match_id });
-                }
-            }
-        }
-
-        [FunctionName("FnStartCheckpoint")]
-        public async Task<HttpResponseMessage> StartCheckpoint(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/start")]HttpRequestMessage req,
-            [DurableClient]IDurableClient fnClient,
             ILogger log)
         {
-            var condision = new OrchestrationStatusQueryCondition()
+            try
             {
-                RuntimeStatus = new List<OrchestrationRuntimeStatus>() { OrchestrationRuntimeStatus.Pending, OrchestrationRuntimeStatus.Running }
-            };
-            var collection = await fnClient.GetStatusAsync(condision, CancellationToken.None);
-            foreach (var status in collection.DurableOrchestrationState)
-            {
-                if(status.Name == "FnRunCheckpoint")
+                var collection = await _service.GetMatches(checkpoint, log);
+
+                var modes = collection.GroupBy(_ => _.game_mode).Select(_ => new { Mode = _.Key, Matches = _.Count() }).ToList();
+                foreach (var item in modes)
                 {
-                    await fnClient.TerminateAsync(status.InstanceId, "There can be only one.");
+                    var entityId = new EntityId(nameof(ModeCounter), item.Mode.ToString());
+                    await fnClient.SignalEntityAsync<IModeCounter>(entityId, proxy => proxy.Add(item.Matches));
                 }
+
+                foreach (var item in collection)
+                {
+                    if (item.game_mode == 18)
+                        await queue.AddAsync(item);
+                }
+
+                var end_time = collection.Select(_ => _.start_time + _.duration).Max();
+                checkpoint.Delta = DateTimeOffset.UtcNow - DateTimeOffset.FromUnixTimeSeconds(end_time);
+                checkpoint.Latest = collection.Max(_ => _.match_seq_num) + 1;
+                checkpoint.Processed = collection.Count();
+
+                var delay = (checkpoint.Processed < 100) ? TimeSpan.FromSeconds(30) : TimeSpan.FromSeconds(1);
+                await Task.Delay(delay);
             }
-
-            var data = await _service.InitializeCheckpoint(log);
-            string instanceId = await fnClient.StartNewAsync("FnRunCheckpoint", data);
-
-            return fnClient.CreateCheckStatusResponse(req, instanceId);
-        } 
+            catch (Exception ex)
+            {
+                log.LogWarning(ex, "Failed to Process Checkpoint");
+                await Task.Delay(TimeSpan.FromSeconds(30));
+            }
+            finally
+            {
+                var json = JsonConvert.SerializeObject(checkpoint);
+                await writer.WriteAsync(json);
+            }
+        }
     }
 }

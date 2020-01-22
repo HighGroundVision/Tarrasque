@@ -14,6 +14,7 @@ namespace HGV.Tarrasque.API.Functions
     {
         private readonly IDotaService _service;
         private readonly MetaClient _metaClient;
+        private const long CATCH_ALL_ACCOUNT = 4294967295;
 
         public FnCounter(IDotaService service)
         {
@@ -21,71 +22,43 @@ namespace HGV.Tarrasque.API.Functions
             _metaClient = MetaClient.Instance.Value;
         }
 
-        [FunctionName("FnStartCounter")]
-        public async Task StartCounter(
-            [QueueTrigger("hgv-ad-matches")]MatchReference item,
+        [FunctionName("FnProcessMatch")]
+        public async Task ProcessMatch(
+            [QueueTrigger("hgv-ad-matches")]Match match,
             [DurableClient]IDurableClient fnClient,
+            //[Queue("hgv-ad-accounts")]IAsyncCollector<Match> queue,
             ILogger log)
         {
-            await fnClient.StartNewAsync("FnRunCounter", item);
-        }
-
-        [FunctionName("FnRunCounter")]
-        public async Task RunCounter([OrchestrationTrigger] IDurableOrchestrationContext context)
-        {
-            var item = context.GetInput<MatchReference>();
-            var match = await context.CallActivityAsync<Match>("FnFetchMatch", item);
-            await context.CallActivityAsync("FnProcessRegions", match);
-            await context.CallActivityAsync("FnProcessPlayers", match);
-        }
-
-        [FunctionName("FnFetchMatch")]
-        public async Task<Match> FetchMatch(
-            [ActivityTrigger] MatchReference item,
-            ILogger log
-        )
-        {
-            var match = await _service.GetMatch(item, log);
-            return match;
-        }
-
-        [FunctionName("FnProcessRegions")]
-        public async Task ProcessRegions(
-            [ActivityTrigger] Match match,
-            [DurableClient] IDurableEntityClient fnClient,
-            ILogger log
-        )
-        {
-            var key = _metaClient.GetRegionId(match.cluster).ToString();
-            var entityId = new EntityId(nameof(RegionsCounter), key);
-            await fnClient.SignalEntityAsync<IRegionsCounter>(entityId, proxy => proxy.Increment());
-        }
-        
-        [FunctionName("FnProcessPlayers")]
-        public async Task ProcessPlayers(
-            [ActivityTrigger] Match match,
-            [DurableClient] IDurableEntityClient fnClient,
-            ILogger log
-        )
-        {
-            const long CATCH_ALL_ACCOUNT = 4294967295;
+            {
+                var key = _metaClient.GetRegionId(match.cluster).ToString();
+                var entityId = new EntityId(nameof(RegionsCounter), key);
+                await fnClient.SignalEntityAsync<IRegionsCounter>(entityId, proxy => proxy.Increment());
+            }
 
             foreach (var player in match.players)
             {
-                if (player.account_id == CATCH_ALL_ACCOUNT)
-                    continue;
-
-                var key = player.account_id.ToString();
-                var entityId = new EntityId(nameof(PlayersCounter), key);
-
                 var victory = (match.radiant_win && player.player_slot < 6);
-                if (victory)
-                    await fnClient.SignalEntityAsync<IPlayersCounter>(entityId, proxy => proxy.AddWin());
-                else
-                    await fnClient.SignalEntityAsync<IPlayersCounter>(entityId, proxy => proxy.AddLoss());
+
+                /*
+                if (player.account_id != CATCH_ALL_ACCOUNT)
+                {
+                    var entityId = new EntityId(nameof(PlayersCounter), player.account_id.ToString());
+                    if (victory)
+                        await fnClient.SignalEntityAsync<IPlayersCounter>(entityId, proxy => proxy.AddWin());
+                    else
+                        await fnClient.SignalEntityAsync<IPlayersCounter>(entityId, proxy => proxy.AddLoss());
+                }
+                */
+
+                {
+                    var entityId = new EntityId(nameof(HeroesCounter), player.hero_id.ToString());
+                    if (victory)
+                        await fnClient.SignalEntityAsync<IHeroesCounter>(entityId, proxy => proxy.AddWin());
+                    else
+                        await fnClient.SignalEntityAsync<IHeroesCounter>(entityId, proxy => proxy.AddLoss());
+                }
 
             }
         }
-
     }
 }
