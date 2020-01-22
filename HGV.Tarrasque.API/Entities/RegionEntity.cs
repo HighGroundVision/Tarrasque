@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.API.Entities
 {
-    public interface IRegionsCounter
+    public interface IRegionEntity
     {
         void Increment();
         Task Reset();
@@ -13,19 +13,19 @@ namespace HGV.Tarrasque.API.Entities
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public class RegionsCounter : IRegionsCounter
+    public class RegionEntity : IRegionEntity
     {
-        [JsonProperty("value")]
-        public int Value { get; set; }
+        [JsonProperty("total")]
+        public int Total { get; set; }
 
         public void Increment()
         {
-            this.Value++;
+            this.Total++;
         }
 
         public Task Reset()
         {
-            this.Value = 0;
+            this.Total = 0;
             return Task.CompletedTask;
         }
 
@@ -34,7 +34,7 @@ namespace HGV.Tarrasque.API.Entities
             Entity.Current.DeleteState();
         }
 
-        [FunctionName(nameof(RegionsCounter))]
-        public static Task Run([EntityTrigger] IDurableEntityContext ctx) => ctx.DispatchAsync<RegionsCounter>();
+        [FunctionName(nameof(RegionEntity))]
+        public static Task Run([EntityTrigger] IDurableEntityContext ctx) => ctx.DispatchAsync<RegionEntity>();
     }
 }

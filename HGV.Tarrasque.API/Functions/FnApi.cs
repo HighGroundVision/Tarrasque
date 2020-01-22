@@ -28,7 +28,7 @@ namespace HGV.Tarrasque.API.Functions
         {
             var query = new EntityQuery()
             {
-                EntityName = nameof(ModeCounter),
+                EntityName = nameof(ModeEntity),
                 FetchState = true,
                 PageSize = 50
             };
@@ -58,7 +58,7 @@ namespace HGV.Tarrasque.API.Functions
         {
             var query = new EntityQuery()
             {
-                EntityName = nameof(RegionsCounter),
+                EntityName = nameof(RegionEntity),
                 FetchState = true,
                 PageSize = 50
             };
@@ -88,7 +88,7 @@ namespace HGV.Tarrasque.API.Functions
         {
             var query = new EntityQuery()
             {
-                EntityName = nameof(HeroesCounter),
+                EntityName = nameof(HeroEntity),
                 FetchState = true,
                 PageSize = 150
             };
@@ -111,33 +111,19 @@ namespace HGV.Tarrasque.API.Functions
             return new OkObjectResult(data);
         }
 
-        /*
         [FunctionName("FnGetAccountCounts")]
         public async Task<IActionResult> GetAccountCounts(
            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "accounts/{key}")] HttpRequest req,
-           [DurableClient] IDurableEntityClient client,
+           [Blob("hgv-players/{key}.json")]TextReader reader,
            string key,
            ILogger log)
         {
-            var entityId = new EntityId(nameof(PlayersCounter), key);
-            var state = await client.ReadEntityStateAsync<PlayersCounter>(entityId);
-
-            if(state.EntityExists)
-            {
-                var data = new
-                {
-                    Wins = state.EntityState.Wins,
-                    Losses = state.EntityState.Losses,
-                    Total =state.EntityState.Total,
-                };
-                return new OkObjectResult(data);
-            }
-            else
-            {
+            if(reader == null)
                 return new NotFoundResult();
-            }
+
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
         }
-        */
     }
 }
 

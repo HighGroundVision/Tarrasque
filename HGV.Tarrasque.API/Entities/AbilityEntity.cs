@@ -5,16 +5,15 @@ using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.API.Entities
 {
-    public interface IPlayersCounter
+    public interface IAbilityEntity
     {
-        void AddWin();
-        void AddLoss();
+        void Increment(bool victory);
         Task Reset();
         void Delete();
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public class PlayersCounter : IPlayersCounter
+    public class AbilityEntity : IAbilityEntity
     {
         [JsonProperty("wins")]
         public int Wins { get; set; }
@@ -22,22 +21,25 @@ namespace HGV.Tarrasque.API.Entities
         [JsonProperty("losses")]
         public int Losses { get; set; }
 
-        public int Total { get { return this.Wins + this.Losses; } }
+        [JsonProperty("total")]
+        public int Total { get; set; }
 
-        public void AddWin()
+        public void Increment(bool victory)
         {
-            this.Wins++;
-        }
+            this.Total++;
 
-        public void AddLoss()
-        {
-            this.Losses++;
+            if (victory)
+                this.Wins++;
+            else
+                this.Losses++;
+
         }
 
         public Task Reset()
         {
             this.Wins = 0;
             this.Losses = 0;
+            this.Total = 0;
             return Task.CompletedTask;
         }
 
@@ -46,7 +48,7 @@ namespace HGV.Tarrasque.API.Entities
             Entity.Current.DeleteState();
         }
 
-        [FunctionName(nameof(PlayersCounter))]
-        public static Task Run([EntityTrigger] IDurableEntityContext ctx) => ctx.DispatchAsync<PlayersCounter>();
+        [FunctionName(nameof(AbilityEntity))]
+        public static Task Run([EntityTrigger] IDurableEntityContext ctx) => ctx.DispatchAsync<AbilityEntity>();
     }
 }

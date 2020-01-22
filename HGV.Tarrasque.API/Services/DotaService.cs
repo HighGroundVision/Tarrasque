@@ -15,9 +15,9 @@ namespace HGV.Tarrasque.API.Services
 {
     public interface IDotaService
     {
-        Task<Checkpoint> Initialize(ILogger log);
+        Task<CheckpointModel> Initialize(ILogger log);
 
-        Task<List<Match>> GetMatches(Checkpoint checkpoint, ILogger log);
+        Task<List<Match>> GetMatches(CheckpointModel checkpoint, ILogger log);
     }
 
     public class DotaService : IDotaService
@@ -28,7 +28,7 @@ namespace HGV.Tarrasque.API.Services
             _dotaClient = dotaClient;
         }
 
-        public async Task<Checkpoint> Initialize(ILogger log)
+        public async Task<CheckpointModel> Initialize(ILogger log)
         {
             Guard.Argument(log, nameof(log)).NotNull();
 
@@ -45,10 +45,10 @@ namespace HGV.Tarrasque.API.Services
                 return matches.Max(_ => _.match_seq_num);
             });
 
-            return new Checkpoint() { Latest = latest };
+            return new CheckpointModel() { Latest = latest };
         }
 
-        public async Task<List<Match>> GetMatches(Checkpoint checkpoint, ILogger log)
+        public async Task<List<Match>> GetMatches(CheckpointModel checkpoint, ILogger log)
         {
             Guard.Argument(checkpoint, nameof(checkpoint)).NotNull();
             Guard.Argument(log, nameof(log)).NotNull();

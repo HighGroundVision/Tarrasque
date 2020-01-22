@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.API.Entities
 {
-    public interface IModeCounter
+    public interface IModeEntity
     {
         void Add(int amount);
         Task Reset();
@@ -13,19 +13,19 @@ namespace HGV.Tarrasque.API.Entities
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public class ModeCounter : IModeCounter
+    public class ModeEntity : IModeEntity
     {
-        [JsonProperty("value")]
-        public int Value { get; set; }
+        [JsonProperty("total")]
+        public int Total { get; set; }
 
         public void Add(int amount)
         {
-            this.Value += amount;
+            this.Total += amount;
         }
 
         public Task Reset()
         {
-            this.Value = 0;
+            this.Total = 0;
             return Task.CompletedTask;
         }
 
@@ -34,7 +34,7 @@ namespace HGV.Tarrasque.API.Entities
             Entity.Current.DeleteState();
         }
 
-        [FunctionName(nameof(ModeCounter))]
-        public static Task Run([EntityTrigger] IDurableEntityContext ctx) => ctx.DispatchAsync<ModeCounter>();
+        [FunctionName(nameof(ModeEntity))]
+        public static Task Run([EntityTrigger] IDurableEntityContext ctx) => ctx.DispatchAsync<ModeEntity>();
     }
 }

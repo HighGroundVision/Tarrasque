@@ -23,20 +23,55 @@ namespace HGV.Tarrasque.API.Functions
 {
     public class FnCheckpoint
     {
+        private const string CHECKPOINT_INSTANCE = "c2598345-6b54-43ee-81f1-90e0b936855f";
         private readonly IDotaService _service;
 
         public FnCheckpoint(IDotaService service)
         {
             _service = service;
         }
-        
-        [FunctionName("FnCheckpoint")]
-        public async Task Checkpoint(
-            [BlobTrigger("hgv-checkpoint/master.json")]Checkpoint checkpoint,
-            [Blob("hgv-checkpoint/master.json")]TextWriter writer,
-            [Queue("hgv-ad-matches")]IAsyncCollector<Match> queue,
+
+        [FunctionName("FnStartCheckpoint")]
+        public async Task<IActionResult> StartCheckpoint(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/start")]HttpRequestMessage req,
+           [DurableClient]IDurableClient fnClient,
+           ILogger log)
+        {
+            var existing = await fnClient.GetStatusAsync(CHECKPOINT_INSTANCE);
+            if(existing == null)
+            {
+                var data = _service.Initialize(log);
+                await fnClient.StartNewAsync("FnRunCheckpoint", CHECKPOINT_INSTANCE, data);
+            }
+            else if (existing.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
+            {
+                var data = existing.Input.ToObject<CheckpointModel>();
+                await fnClient.StartNewAsync("FnRunCheckpoint", CHECKPOINT_INSTANCE, data);
+            }
+
+            var payload = fnClient.CreateHttpManagementPayload(CHECKPOINT_INSTANCE);
+            return new RedirectResult(payload.StatusQueryGetUri, false);
+        }
+
+        [FunctionName("FnRunCheckpoint")]
+        public async Task RunCheckpoint([OrchestrationTrigger] IDurableOrchestrationContext context)
+        {
+            var input = context.GetInput<CheckpointModel>();
+            var output = await context.CallActivityAsync<CheckpointModel>("FnProcessCheckpoint", input);
+
+            DateTime delay = (output.Processed < 100) ? context.CurrentUtcDateTime.AddSeconds(30) : context.CurrentUtcDateTime.AddSeconds(1);
+            await context.CreateTimer(delay, CancellationToken.None);
+
+            context.ContinueAsNew(output);
+        }
+
+        [FunctionName("FnProcessCheckpoint")]
+        public async Task<CheckpointModel> ProcessCheckpoint(
+            [ActivityTrigger] CheckpointModel checkpoint,
             [DurableClient] IDurableEntityClient fnClient,
-            ILogger log)
+            [Queue("hgv-ad-matches")]IAsyncCollector<MatchRef> queue,
+            ILogger log
+        )
         {
             try
             {
@@ -45,34 +80,27 @@ namespace HGV.Tarrasque.API.Functions
                 var modes = collection.GroupBy(_ => _.game_mode).Select(_ => new { Mode = _.Key, Matches = _.Count() }).ToList();
                 foreach (var item in modes)
                 {
-                    var entityId = new EntityId(nameof(ModeCounter), item.Mode.ToString());
-                    await fnClient.SignalEntityAsync<IModeCounter>(entityId, proxy => proxy.Add(item.Matches));
+                    var entityId = new EntityId(nameof(ModeEntity), item.Mode.ToString());
+                    await fnClient.SignalEntityAsync<IModeEntity>(entityId, proxy => proxy.Add(item.Matches));
                 }
 
                 foreach (var item in collection)
                 {
                     if (item.game_mode == 18)
-                        await queue.AddAsync(item);
+                        await queue.AddAsync(new MatchRef() { Match = item });
                 }
 
                 var end_time = collection.Select(_ => _.start_time + _.duration).Max();
                 checkpoint.Delta = DateTimeOffset.UtcNow - DateTimeOffset.FromUnixTimeSeconds(end_time);
                 checkpoint.Latest = collection.Max(_ => _.match_seq_num) + 1;
                 checkpoint.Processed = collection.Count();
-
-                var delay = (checkpoint.Processed < 100) ? TimeSpan.FromSeconds(30) : TimeSpan.FromSeconds(1);
-                await Task.Delay(delay);
             }
             catch (Exception ex)
             {
-                log.LogWarning(ex, "Failed to Process Checkpoint");
-                await Task.Delay(TimeSpan.FromSeconds(30));
+                log.LogWarning(ex.Message);
             }
-            finally
-            {
-                var json = JsonConvert.SerializeObject(checkpoint);
-                await writer.WriteAsync(json);
-            }
+ 
+            return checkpoint;
         }
     }
 }
