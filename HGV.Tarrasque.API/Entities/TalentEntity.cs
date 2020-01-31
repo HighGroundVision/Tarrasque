@@ -16,7 +16,8 @@ namespace HGV.Tarrasque.API.Entities
 
     public interface ITalentEntity
     {
-        void Increment(List<int> talents, bool victory);
+        void AddWin(List<int> abilities);
+        void AddLoss(List<int> abilities);
         Task Reset();
         void Delete();
     }
@@ -24,29 +25,51 @@ namespace HGV.Tarrasque.API.Entities
     [JsonObject(MemberSerialization.OptIn)]
     public class TalentEntity : ITalentEntity
     {
+        public TalentEntity()
+        {
+            this.Collection = new List<TalentData>();
+        }
+
         [JsonProperty("collection")]
         public List<TalentData> Collection { get; set; }
 
-
-        public void Increment(List<int> talents, bool victory)
+ 
+        public void AddWin(List<int> abilities)
         {
-            foreach (var id in talents)
+            if (this.Collection == null)
+                this.Collection = new List<TalentData>();
+
+            foreach (var id in abilities)
             {
-                var existing = Collection.Find(_ => _.TalentId == id);
+                var existing = this.Collection.Find(_ => _.TalentId == id);
                 if (existing == null)
                 {
-                    if (victory)
-                        Collection.Add(new TalentData() { TalentId = id, Total = 1, Wins = 1, Losses = 0 });
-                    else
-                        Collection.Add(new TalentData() { TalentId = id, Total = 1, Wins = 0, Losses = 1 });
+                    this.Collection.Add(new TalentData() { TalentId = id, Total = 1, Wins = 1, Losses = 0 });
                 }
                 else
                 {
                     existing.Total++;
-                    if (victory)
-                        existing.Wins++;
-                    else
-                        existing.Losses++;
+                    existing.Wins++;
+                }
+            }
+        }
+
+        public void AddLoss(List<int> abilities)
+        {
+            if (this.Collection == null)
+                this.Collection = new List<TalentData>();
+
+            foreach (var id in abilities)
+            {
+                var existing = this.Collection.Find(_ => _.TalentId == id);
+                if (existing == null)
+                {
+                    this.Collection.Add(new TalentData() { TalentId = id, Total = 1, Wins = 1, Losses = 0 });
+                }
+                else
+                {
+                    existing.Total++;
+                    existing.Losses++;
                 }
             }
         }

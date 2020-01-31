@@ -51,8 +51,9 @@ namespace HGV.Tarrasque.API.Functions
 
                 var abilities = player.GetAbilities();
                 await UpdateHeroPair(fnClient, player.hero_id, abilities, victory);
-                await UpdateAbilities(fnClient, abilities, victory);
-                await UpdateAbilityPairs(fnClient, abilities, victory);
+
+                // await UpdateAbilities(fnClient, abilities, victory);
+                // await UpdateAbilityPairs(fnClient, abilities, victory);
             }
         }
 
@@ -80,7 +81,11 @@ namespace HGV.Tarrasque.API.Functions
         private static async Task UpdateHeroPair(IDurableClient fnClient, int hero_id, List<int> abilities, bool victory)
         {
             var entityId = new EntityId(nameof(HeroPairEntity), hero_id.ToString());
-            await fnClient.SignalEntityAsync<IHeroPairEntity>(entityId, proxy => proxy.Increment(abilities, victory));
+
+            if(victory)
+                await fnClient.SignalEntityAsync<IHeroPairEntity>(entityId, proxy => proxy.AddWin(abilities));
+            else
+                await fnClient.SignalEntityAsync<IHeroPairEntity>(entityId, proxy => proxy.AddLoss(abilities));
         }
 
         private static async Task UpdateAbilities(IDurableClient fnClient, List<int> abilities, bool victory)
@@ -99,7 +104,11 @@ namespace HGV.Tarrasque.API.Functions
                 var filtered = abilities.Where(_ => _ != id).ToList();
 
                 var entityId = new EntityId(nameof(AbilityPairEntity), id.ToString());
-                await fnClient.SignalEntityAsync<IAbilityPairEntity>(entityId, proxy => proxy.Increment(filtered, victory));
+
+                if(victory)
+                    await fnClient.SignalEntityAsync<IAbilityPairEntity>(entityId, proxy => proxy.AddWin(filtered));
+                else
+                    await fnClient.SignalEntityAsync<IAbilityPairEntity>(entityId, proxy => proxy.AddLoss(filtered));
             }
             
         }
@@ -107,7 +116,11 @@ namespace HGV.Tarrasque.API.Functions
         private static async Task UpdateTalents(IDurableClient fnClient, int hero_id, List<int> talents, bool victory)
         {
             var entityId = new EntityId(nameof(TalentEntity), hero_id.ToString());
-            await fnClient.SignalEntityAsync<ITalentEntity>(entityId, proxy => proxy.Increment(talents, victory));
+            
+            if(victory)
+                await fnClient.SignalEntityAsync<ITalentEntity>(entityId, proxy => proxy.AddWin(talents));
+            else
+                await fnClient.SignalEntityAsync<ITalentEntity>(entityId, proxy => proxy.AddLoss(talents));
         }
     }
 }

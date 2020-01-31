@@ -17,7 +17,8 @@ namespace HGV.Tarrasque.API.Entities
 
     public interface IHeroPairEntity
     {
-        void Increment(List<int> abilities, bool victory);
+        void AddWin(List<int> abilities);
+        void AddLoss(List<int> abilities);
         Task Reset();
         void Delete();
     }
@@ -25,28 +26,50 @@ namespace HGV.Tarrasque.API.Entities
     [JsonObject(MemberSerialization.OptIn)]
     public class HeroPairEntity : IHeroPairEntity
     {
+        public HeroPairEntity()
+        {
+            this.Collection = new List<HeroPairData>();
+        }
+
         [JsonProperty("collection")]
         public List<HeroPairData> Collection { get; set; }
 
-        public void Increment(List<int> abilities, bool victory)
+        public void AddWin(List<int> abilities)
         {
+            if (this.Collection == null)
+                this.Collection = new List<HeroPairData>();
+
             foreach (var id in abilities)
             {
-                var existing = Collection.Find(_ => _.AbilityId == id);
+                var existing = this.Collection.Find(_ => _.AbilityId == id);
                 if (existing == null)
                 {
-                    if(victory)
-                        Collection.Add(new HeroPairData() { AbilityId = id, Total = 1, Wins = 1, Losses = 0 });
-                    else
-                        Collection.Add(new HeroPairData() { AbilityId = id, Total = 1, Wins = 0, Losses = 1 });
+                    this.Collection.Add(new HeroPairData() { AbilityId = id, Total = 1, Wins = 1, Losses = 0 });
                 }
                 else
                 {
                     existing.Total++;
-                    if(victory)
-                        existing.Wins++;
-                    else
-                        existing.Losses++;
+                    existing.Wins++;
+                }
+            }
+        }
+
+        public void AddLoss(List<int> abilities)
+        {
+            if (this.Collection == null)
+                this.Collection = new List<HeroPairData>();
+
+            foreach (var id in abilities)
+            {
+                var existing = this.Collection.Find(_ => _.AbilityId == id);
+                if (existing == null)
+                {
+                    this.Collection.Add(new HeroPairData() { AbilityId = id, Total = 1, Wins = 1, Losses = 0 });
+                }
+                else
+                {
+                    existing.Total++;
+                    existing.Losses++;
                 }
             }
         }

@@ -8,7 +8,7 @@ namespace HGV.Tarrasque.API.Entities
     public interface IModeEntity
     {
         void Add(int amount);
-        Task Reset();
+        void Reset();
         void Delete();
     }
 
@@ -23,10 +23,9 @@ namespace HGV.Tarrasque.API.Entities
             this.Total += amount;
         }
 
-        public Task Reset()
+        public void Reset()
         {
             this.Total = 0;
-            return Task.CompletedTask;
         }
 
         public void Delete()

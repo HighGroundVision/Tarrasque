@@ -1,11 +1,10 @@
 using HGV.Basilius;
 using HGV.Tarrasque.API.Entities;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,15 +12,18 @@ using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.API.Functions
 {
-    public class FnApi
+    public class FnDailyCounts
     {
-
-        [FunctionName("FnGetModesCounts")]
-        public async Task<IActionResult> GetModesCounts(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "modes")] HttpRequest req,
-           [DurableClient] IDurableEntityClient client,
-           ILogger log)
+        [FunctionName("FnDailyModes")]
+        public async Task DailyModes(
+            [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
+            [Blob("hgv-modes/{datetime:yyyy-MM-dd-HH}.json")] TextWriter writer,
+            [DurableClient] IDurableEntityClient client,
+            ILogger log
+        )
         {
+            log.LogInformation("FnDailyModes");
+
             var query = new EntityQuery()
             {
                 EntityName = nameof(ModeEntity),
@@ -45,14 +47,22 @@ namespace HGV.Tarrasque.API.Functions
             .OrderByDescending(_ => _.Total)
             .ToList();
 
-            return new OkObjectResult(data);
+            foreach (var item in collection.Entities)
+            {
+                await client.SignalEntityAsync<IModeEntity>(item.EntityId, proxy => proxy.Delete());
+            }
+
+            var json = JsonConvert.SerializeObject(data);
+            await writer.WriteAsync(json);
         }
 
-        [FunctionName("FnGetRegionsCounts")]
-        public async Task<IActionResult> GetRegionsCounts(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "regions")] HttpRequest req,
-           [DurableClient] IDurableEntityClient client,
-           ILogger log)
+        [FunctionName("FnDailyRegions")]
+        public async Task DailyRegions(
+            [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
+            [Blob("hgv-regions/{datetime:yyyy-MM-dd-HH}.json")] TextWriter writer,
+            [DurableClient] IDurableEntityClient client,
+           ILogger log
+        )
         {
             var query = new EntityQuery()
             {
@@ -83,14 +93,22 @@ namespace HGV.Tarrasque.API.Functions
             .OrderByDescending(_ => _.Total)
             .ToList();
 
-            return new OkObjectResult(data);
+            foreach (var item in collection.Entities)
+            {
+                await client.SignalEntityAsync<IRegionEntity>(item.EntityId, proxy => proxy.Delete());
+            }
+
+            var json = JsonConvert.SerializeObject(data);
+            await writer.WriteAsync(json);
         }
 
-        [FunctionName("FnGetHeroesCounts")]
-        public async Task<IActionResult> GetHeroesCounts(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "heroes")] HttpRequest req,
+        [FunctionName("FnDailyHeroes")]
+        public async Task DailyHeroes(
+           [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
+           [Blob("hgv-heroes/{datetime:yyyy-MM-dd-HH}.json")] TextWriter writer,
            [DurableClient] IDurableEntityClient client,
-           ILogger log)
+           ILogger log
+        )
         {
             var query = new EntityQuery()
             {
@@ -100,9 +118,9 @@ namespace HGV.Tarrasque.API.Functions
             };
             var collection = await client.ListEntitiesAsync(query, CancellationToken.None);
             var states = collection.Entities
-                .Select(_ => new { 
-                    Id = int.Parse(_.EntityId.EntityKey), 
-                    _.State 
+                .Select(_ => new {
+                    Id = int.Parse(_.EntityId.EntityKey),
+                    _.State
                 }).ToList();
 
             var heroes = MetaClient.Instance.Value.GetADHeroes();
@@ -117,38 +135,14 @@ namespace HGV.Tarrasque.API.Functions
             .OrderByDescending(_ => _.Total)
             .ToList();
 
-            return new OkObjectResult(data);
-        }
+            foreach (var item in collection.Entities)
+            {
+                await client.SignalEntityAsync<IHeroEntity>(item.EntityId, proxy => proxy.Delete());
+            }
 
-        [FunctionName("FnGetHeropPairsCounts")]
-        public async Task<IActionResult> GetHeropPairsCounts(
-          [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "hero/{key}")] HttpRequest req,
-          [DurableClient] IDurableEntityClient client,
-          string key,
-          ILogger log)
-        {
+            var json = JsonConvert.SerializeObject(data);
+            await writer.WriteAsync(json);
 
-            var entityId = new EntityId(nameof(HeroPairEntity), key);
-            var state = await client.ReadEntityStateAsync<HeroPairEntity>(entityId);
-            if (state.EntityExists == false)
-                return new NotFoundResult();
-            
-            return new OkObjectResult(state.EntityState.Collection);
-        }
-
-        [FunctionName("FnGetAccountCounts")]
-        public async Task<IActionResult> GetAccountCounts(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "accounts/{key}")] HttpRequest req,
-           [Blob("hgv-ad-players/{key}.json")]TextReader reader,
-           string key,
-           ILogger log)
-        {
-            if(reader == null)
-                return new NotFoundResult();
-
-            var json = await reader.ReadToEndAsync();
-            return new OkObjectResult(json);
         }
     }
 }
-

@@ -23,7 +23,6 @@ namespace HGV.Tarrasque.API.Functions
 {
     public class FnCheckpoint
     {
-        private const string CHECKPOINT_INSTANCE = "c2598345-6b54-43ee-81f1-90e0b936855f";
         private readonly IDotaService _service;
 
         public FnCheckpoint(IDotaService service)
@@ -31,51 +30,46 @@ namespace HGV.Tarrasque.API.Functions
             _service = service;
         }
 
-        [FunctionName("FnStartCheckpoint")]
-        public async Task<IActionResult> StartCheckpoint(
-           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/start")]HttpRequestMessage req,
-           [DurableClient]IDurableClient fnClient,
+        [FunctionName("FnCheckpointStart")]
+        public async Task<IActionResult> Start(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/start")] HttpRequest req,
+           [Blob("hgv-checkpoint/master.json")]TextWriter writer,
            ILogger log)
         {
-            var existing = await fnClient.GetStatusAsync(CHECKPOINT_INSTANCE);
-            if(existing == null)
-            {
-                var data = _service.Initialize(log);
-                await fnClient.StartNewAsync("FnRunCheckpoint", CHECKPOINT_INSTANCE, data);
-            }
-            else if (existing.RuntimeStatus == OrchestrationRuntimeStatus.Failed)
-            {
-                var data = existing.Input.ToObject<CheckpointModel>();
-                await fnClient.StartNewAsync("FnRunCheckpoint", CHECKPOINT_INSTANCE, data);
-            }
+            var checkpoint = await _service.Initialize(log);
+            var json = JsonConvert.SerializeObject(checkpoint);
+            await writer.WriteAsync(json);
 
-            var payload = fnClient.CreateHttpManagementPayload(CHECKPOINT_INSTANCE);
-            return new RedirectResult(payload.StatusQueryGetUri, false);
+            return new RedirectResult("/api/checkpoint/status", false);
         }
 
-        [FunctionName("FnRunCheckpoint")]
-        public async Task RunCheckpoint([OrchestrationTrigger] IDurableOrchestrationContext context)
+        [FunctionName("FnCheckpointStatus")]
+        public async Task<IActionResult> Status(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/status")] HttpRequest req,
+           [Blob("hgv-checkpoint/master.json")]TextReader reader,
+           ILogger log)
         {
-            var input = context.GetInput<CheckpointModel>();
-            var output = await context.CallActivityAsync<CheckpointModel>("FnProcessCheckpoint", input);
-
-            DateTime delay = (output.Processed < 100) ? context.CurrentUtcDateTime.AddSeconds(30) : context.CurrentUtcDateTime.AddSeconds(1);
-            await context.CreateTimer(delay, CancellationToken.None);
-
-            context.ContinueAsNew(output);
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
         }
 
-        [FunctionName("FnProcessCheckpoint")]
-        public async Task<CheckpointModel> ProcessCheckpoint(
-            [ActivityTrigger] CheckpointModel checkpoint,
-            [DurableClient] IDurableEntityClient fnClient,
+        [FunctionName("FnCheckpointProcess")]
+        public async Task Process(
+            [BlobTrigger("hgv-checkpoint/master.json")]TextReader reader,
+            [Blob("hgv-checkpoint/master.json")]TextWriter writer,
             [Queue("hgv-ad-matches")]IAsyncCollector<MatchRef> queue,
+            [DurableClient] IDurableEntityClient fnClient,
             ILogger log
         )
         {
+            var input = await reader.ReadToEndAsync();
+            var checkpoint = JsonConvert.DeserializeObject<CheckpointModel>(input);
+
             try
             {
                 var collection = await _service.GetMatches(checkpoint, log);
+                if (collection.Count < 100)
+                    throw new ApplicationException("Below Processing Limit");
 
                 var modes = collection.GroupBy(_ => _.game_mode).Select(_ => new { Mode = _.Key, Matches = _.Count() }).ToList();
                 foreach (var item in modes)
@@ -98,9 +92,12 @@ namespace HGV.Tarrasque.API.Functions
             catch (Exception ex)
             {
                 log.LogWarning(ex.Message);
+
+                await Task.Delay(TimeSpan.FromSeconds(30));
             }
- 
-            return checkpoint;
+
+            var output = JsonConvert.SerializeObject(checkpoint);
+            await writer.WriteAsync(output);
         }
     }
 }
