@@ -57,7 +57,6 @@ namespace HGV.Tarrasque.API.Functions
         public async Task Process(
             [BlobTrigger("hgv-checkpoint/master.json")]TextReader reader,
             [Blob("hgv-checkpoint/master.json")]TextWriter writer,
-            [Queue("hgv-ad-matches")]IAsyncCollector<MatchRef> queue,
             [DurableClient] IDurableEntityClient fnClient,
             ILogger log
         )
@@ -71,23 +70,24 @@ namespace HGV.Tarrasque.API.Functions
                 if (collection.Count < 100)
                     throw new ApplicationException("Below Processing Limit");
 
-                var modes = collection.GroupBy(_ => _.game_mode).Select(_ => new { Mode = _.Key, Matches = _.Count() }).ToList();
+                var modes = collection
+                    .GroupBy(_ => new { Mode = _.game_mode, Timestamp = GetTimestamp(_) })
+                    .Select(_ => new { _.Key, Matches = _.Count() })
+                    .ToList();
+
                 foreach (var item in modes)
                 {
-                    var entityId = new EntityId(nameof(ModeEntity), item.Mode.ToString());
+                    var key = $"{item.Key.Mode}|{item.Key.Timestamp}";
+                    var entityId = new EntityId(nameof(ModeEntity), key);
                     await fnClient.SignalEntityAsync<IModeEntity>(entityId, proxy => proxy.Add(item.Matches));
-                }
-
-                foreach (var item in collection)
-                {
-                    if (item.game_mode == 18)
-                        await queue.AddAsync(new MatchRef() { Match = item });
                 }
 
                 var end_time = collection.Select(_ => _.start_time + _.duration).Max();
                 checkpoint.Delta = DateTimeOffset.UtcNow - DateTimeOffset.FromUnixTimeSeconds(end_time);
                 checkpoint.Latest = collection.Max(_ => _.match_seq_num) + 1;
                 checkpoint.Processed = collection.Count();
+
+                await Task.Delay(TimeSpan.FromSeconds(1));
             }
             catch (Exception ex)
             {
@@ -99,5 +99,20 @@ namespace HGV.Tarrasque.API.Functions
             var output = JsonConvert.SerializeObject(checkpoint);
             await writer.WriteAsync(output);
         }
+
+        private string GetTimestamp(Match m)
+        {
+            var timestamp = DateTimeOffset.FromUnixTimeSeconds(m.start_time).ToString("yyMMdd");
+            return timestamp;
+        }
     }
 }
+
+/*
+ * // [Queue("hgv-ad-matches")]IAsyncCollector<MatchRef> queue,
+foreach (var item in collection)
+{
+    if (item.game_mode == 18)
+        await queue.AddAsync(new MatchRef() { Match = item });
+}
+*/

@@ -8,24 +8,18 @@ namespace HGV.Tarrasque.API.Entities
     public interface IModeEntity
     {
         void Add(int amount);
-        void Reset();
         void Delete();
     }
 
     [JsonObject(MemberSerialization.OptIn)]
     public class ModeEntity : IModeEntity
     {
-        [JsonProperty("total")]
+        [JsonProperty(nameof(Total))]
         public int Total { get; set; }
 
         public void Add(int amount)
         {
             this.Total += amount;
-        }
-
-        public void Reset()
-        {
-            this.Total = 0;
         }
 
         public void Delete()

@@ -5,6 +5,8 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,133 +18,41 @@ namespace HGV.Tarrasque.API.Functions
     {
         [FunctionName("FnDailyModes")]
         public async Task DailyModes(
-            [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
-            [Blob("hgv-modes/{datetime:yyyy-MM-dd-HH}.json")] TextWriter writer,
+            [TimerTrigger("0 0 7 * * *")]TimerInfo myTimer,
             [DurableClient] IDurableEntityClient client,
+            IBinder binder,
             ILogger log
         )
         {
-            log.LogInformation("FnDailyModes");
-
-            var query = new EntityQuery()
+            try
             {
-                EntityName = nameof(ModeEntity),
-                FetchState = true,
-                PageSize = 50
-            };
-            var collection = await client.ListEntitiesAsync(query, CancellationToken.None);
-            var states = collection.Entities
-                .Select(_ => new {
-                    Id = int.Parse(_.EntityId.EntityKey),
-                    _.State
-                }).ToList();
+                var last = DateTime.UtcNow.AddDays(-1);
+                var timestamp = last.ToString("yyMMdd");
+                var data = new Dictionary<int, int>();
+                var modes = MetaClient.Instance.Value.GetModes();
 
-            var modes = MetaClient.Instance.Value.GetModes();
-            var data = modes.Join(states, _ => _.Key, _ => _.Id, (lhs, rhs) => new
-            {
-                Id = lhs.Key,
-                Name = lhs.Value,
-                Total = (int)rhs.State["total"],
-            })
-            .OrderByDescending(_ => _.Total)
-            .ToList();
+                foreach (var item in modes)
+                {
+                    var key = $"{item.Key}|{timestamp}";
+                    var id = new EntityId(nameof(ModeEntity), key);
 
-            foreach (var item in collection.Entities)
-            {
-                await client.SignalEntityAsync<IModeEntity>(item.EntityId, proxy => proxy.Delete());
+                    var entity = await client.ReadEntityStateAsync<ModeEntity>(id);
+                    var value = entity.EntityState?.Total ?? 0;
+                    data.Add(item.Key, value);
+
+                    await client.SignalEntityAsync<IModeEntity>(id, proxy => proxy.Delete());
+                }
+
+                var attr = new BlobAttribute($"hgv-modes/{timestamp}.json");
+                var writer = await binder.BindAsync<TextWriter>(attr);
+                var json = JsonConvert.SerializeObject(data);
+                await writer.WriteAsync(json);
             }
-
-            var json = JsonConvert.SerializeObject(data);
-            await writer.WriteAsync(json);
+            catch(Exception ex)
+            {
+                throw;
+            }
         }
 
-        [FunctionName("FnDailyRegions")]
-        public async Task DailyRegions(
-            [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
-            [Blob("hgv-regions/{datetime:yyyy-MM-dd-HH}.json")] TextWriter writer,
-            [DurableClient] IDurableEntityClient client,
-           ILogger log
-        )
-        {
-            var query = new EntityQuery()
-            {
-                EntityName = nameof(RegionEntity),
-                FetchState = true,
-                PageSize = 50
-            };
-            var collection = await client.ListEntitiesAsync(query, CancellationToken.None);
-            var states = collection.Entities
-                .Select(_ => new {
-                    Id = int.Parse(_.EntityId.EntityKey),
-                    _.State
-                }).ToList();
-
-            var regions = MetaClient.Instance.Value.GetRegions();
-            var data = regions.Join(states, _ => _.Key, _ => _.Id, (lhs, rhs) => new
-            {
-                Id = lhs.Key,
-                Name = lhs.Value,
-                Total = (int)rhs.State["total"],
-            })
-            .GroupBy(_ => _.Name)
-            .Select(_ => new
-            {
-                Name = _.Key,
-                Total = _.Sum(x => x.Total),
-            })
-            .OrderByDescending(_ => _.Total)
-            .ToList();
-
-            foreach (var item in collection.Entities)
-            {
-                await client.SignalEntityAsync<IRegionEntity>(item.EntityId, proxy => proxy.Delete());
-            }
-
-            var json = JsonConvert.SerializeObject(data);
-            await writer.WriteAsync(json);
-        }
-
-        [FunctionName("FnDailyHeroes")]
-        public async Task DailyHeroes(
-           [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
-           [Blob("hgv-heroes/{datetime:yyyy-MM-dd-HH}.json")] TextWriter writer,
-           [DurableClient] IDurableEntityClient client,
-           ILogger log
-        )
-        {
-            var query = new EntityQuery()
-            {
-                EntityName = nameof(HeroEntity),
-                FetchState = true,
-                PageSize = 150
-            };
-            var collection = await client.ListEntitiesAsync(query, CancellationToken.None);
-            var states = collection.Entities
-                .Select(_ => new {
-                    Id = int.Parse(_.EntityId.EntityKey),
-                    _.State
-                }).ToList();
-
-            var heroes = MetaClient.Instance.Value.GetADHeroes();
-            var data = heroes.Join(states, _ => _.Id, _ => _.Id, (lhs, rhs) => new
-            {
-                Id = lhs.Id,
-                Name = lhs.Name,
-                Wins = (int)rhs.State["wins"],
-                Losses = (int)rhs.State["losses"],
-                Total = (int)rhs.State["total"],
-            })
-            .OrderByDescending(_ => _.Total)
-            .ToList();
-
-            foreach (var item in collection.Entities)
-            {
-                await client.SignalEntityAsync<IHeroEntity>(item.EntityId, proxy => proxy.Delete());
-            }
-
-            var json = JsonConvert.SerializeObject(data);
-            await writer.WriteAsync(json);
-
-        }
     }
 }
