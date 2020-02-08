@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.API", "HGV.Tarrasque.API\HGV.Tarrasque.API.csproj", "{67E8D62F-8206-4006-9052-BB3B645789F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Common", "HGV.Tarrasque.Common\HGV.Tarrasque.Common.csproj", "{6AF38347-CA6C-4CC6-A7D9-6932EA12EE1C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Api", "HGV.Tarrasque.Api\HGV.Tarrasque.Api.csproj", "{722AED55-6009-4904-BE00-5A4FE12E2FE1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessCheckpoint", "HGV.Tarrasque.ProcessCheckpoint\HGV.Tarrasque.ProcessCheckpoint.csproj", "{801CB6BA-3288-4620-9E3F-3024EB181948}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessMatch", "HGV.Tarrasque.ProcessMatch\HGV.Tarrasque.ProcessMatch.csproj", "{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +17,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{67E8D62F-8206-4006-9052-BB3B645789F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67E8D62F-8206-4006-9052-BB3B645789F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67E8D62F-8206-4006-9052-BB3B645789F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67E8D62F-8206-4006-9052-BB3B645789F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AF38347-CA6C-4CC6-A7D9-6932EA12EE1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AF38347-CA6C-4CC6-A7D9-6932EA12EE1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AF38347-CA6C-4CC6-A7D9-6932EA12EE1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AF38347-CA6C-4CC6-A7D9-6932EA12EE1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{722AED55-6009-4904-BE00-5A4FE12E2FE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{722AED55-6009-4904-BE00-5A4FE12E2FE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{722AED55-6009-4904-BE00-5A4FE12E2FE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{722AED55-6009-4904-BE00-5A4FE12E2FE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{801CB6BA-3288-4620-9E3F-3024EB181948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{801CB6BA-3288-4620-9E3F-3024EB181948}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{801CB6BA-3288-4620-9E3F-3024EB181948}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{801CB6BA-3288-4620-9E3F-3024EB181948}.Release|Any CPU.Build.0 = Release|Any CPU
+		{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
