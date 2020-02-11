@@ -39,7 +39,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             tasks.Add(UpdateAbilityCombos(match, binder, log));
             await Task.WhenAll(tasks);
 
-            var delta = DateTime.Now - start;
+            var delta = (DateTime.Now - start).ToString(@"mm\:ss");
             log.LogWarning($"ProcessMatch: {delta}");
         }
 
