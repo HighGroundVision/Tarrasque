@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Net.Http;
 using HGV.Daedalus;
 using HGV.Tarrasque.Api.Services;
+using HGV.Tarrasque.Common.Entities;
 
 namespace HGV.Tarrasque.Api.Functions
 {
@@ -55,19 +56,17 @@ namespace HGV.Tarrasque.Api.Functions
             return new OkObjectResult(json);
         }
 
-        /*
         [FunctionName("FnRegionCounts")]
-        public async Task<IActionResult> GetRegionCounts(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "daily/region/{region}/{date}")] HttpRequest req,
-            [Blob("hgv-regions/{region}/{date}.json")]TextReader reader,
+        public IActionResult GetRegionCounts(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "daily/region/{date}/{region}")] HttpRequest req,
+            [Table("HGVRegions", "{date}", "{region}")]RegionEntity entity,
             ILogger log)
         {
-            if (reader == null)
+            if (entity == null)
                 return new NotFoundResult();
 
-            var json = await reader.ReadToEndAsync();
+            var json = JsonConvert.SerializeObject(entity);
             return new OkObjectResult(json);
         }
-        */
     }
 }
