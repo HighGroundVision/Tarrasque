@@ -5,24 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Models\AbilityData.cs" />
-    <Compile Remove="Models\AbilityReference.cs" />
-    <Compile Remove="Models\AccountData.cs" />
-    <Compile Remove="Models\AccountReference.cs" />
-    <Compile Remove="Models\AggregateReference.cs" />
-    <Compile Remove="Models\AggregateTrigger.cs" />
-    <Compile Remove="Models\Checkpoint.cs" />
-    <Compile Remove="Models\HeroAbilityData.cs" />
-    <Compile Remove="Models\HeroAbilityReference.cs" />
-    <Compile Remove="Models\HeroData.cs" />
-    <Compile Remove="Models\HeroReference.cs" />
-    <Compile Remove="Models\History.cs" />
-    <Compile Remove="Models\RegionAggregateReference.cs" />
-    <Compile Remove="Models\RegionData.cs" />
-    <Compile Remove="Models\RegionReference.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="HGV.Basilius" Version="3.0.55" />
     <PackageReference Include="HGV.Daedalus" Version="2.0.18" />
     <PackageReference Include="morelinq" Version="3.3.2" />

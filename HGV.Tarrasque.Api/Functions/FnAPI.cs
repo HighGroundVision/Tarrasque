@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using System.Net.Http;
 using HGV.Daedalus;
 using HGV.Tarrasque.Api.Services;
-using HGV.Tarrasque.Common.Models;
 
 namespace HGV.Tarrasque.Api.Functions
 {

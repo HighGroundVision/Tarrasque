@@ -1,5 +1,4 @@
 using HGV.Tarrasque.ProcessCheckpoint.Services;
-using HGV.Tarrasque.Common.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System;
