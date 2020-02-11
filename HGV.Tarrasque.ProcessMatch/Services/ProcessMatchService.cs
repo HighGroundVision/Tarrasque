@@ -34,7 +34,6 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             tasks.Add(UpdateRegion(match, binder, log));
             tasks.Add(UpdateHeroes(match, binder, log));
             tasks.Add(UpdateAbilities(match, binder, log));
-            tasks.Add(UpdateTalents(match, binder, log));
             tasks.Add(UpdateHeroCombos(match, binder, log));
             tasks.Add(UpdateAbilityCombos(match, binder, log));
             await Task.WhenAll(tasks);
@@ -155,6 +154,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         private static async Task UpdateTalents(Match match, IBinder binder, ILogger log)
         {
+            //TODO: Not Working Investigate why...
             try
             {
                 var partitionKey = match.GetDate();
