@@ -22,10 +22,10 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
         [FunctionName("FnProcessMatch")]
         public async Task Process(
             [QueueTrigger("hgv-ad-matches")]Match match,
-            [DurableClient] IDurableEntityClient client,
+            IBinder binder,
             ILogger log)
         {
-            await _service.ProcessMatch(match, client, log);
+            await _service.ProcessMatch(match, binder, log);
         }
     }
 }

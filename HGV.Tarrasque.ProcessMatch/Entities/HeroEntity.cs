@@ -1,48 +1,15 @@
-﻿using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Newtonsoft.Json;
-using System.Threading.Tasks;
+﻿using Microsoft.WindowsAzure.Storage.Table;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace HGV.Tarrasque.ProcessMatch.Entities
 {
-    public interface IHeroEntity
+    public class HeroEntity : TableEntity
     {
-        Task IncrementTotal();
-        Task IncrementWins();
-        Task Reset();
-    }
-
-    [JsonObject(MemberSerialization.OptIn)]
-    public class HeroEntity : IHeroEntity
-    {
-        [JsonProperty(nameof(Total))]
         public int Total { get; set; }
-
-        [JsonProperty(nameof(Wins))]
         public int Wins { get; set; }
-
-        public Task IncrementTotal()
-        {
-            this.Total++;
-            return Task.CompletedTask;
-        }
-
-        public Task IncrementWins()
-        {
-            this.Wins++;
-            return Task.CompletedTask;
-        }
-
-        public Task Reset()
-        {
-            this.Total = 0;
-            this.Wins = 0;
-            return Task.CompletedTask;
-        }
-
-        [FunctionName(nameof(HeroEntity))]
-        public static Task Run([EntityTrigger] IDurableEntityContext ctx) => ctx.DispatchAsync<HeroEntity>();
-
-      
+        public int Losses { get; set; }
+        public float WinRate { get; set; }
     }
 }

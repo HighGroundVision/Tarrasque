@@ -55,6 +55,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
                 {
                     checkpoint.Total++;
                     await queue.AddAsync(match);
+                    break;
                 }
             }
 

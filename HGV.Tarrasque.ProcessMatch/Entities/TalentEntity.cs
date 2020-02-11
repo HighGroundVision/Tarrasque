@@ -5,7 +5,7 @@ using System.Text;
 
 namespace HGV.Tarrasque.ProcessMatch.Entities
 {
-    public class HeroComboEntity : TableEntity
+    public class TalentEntity : TableEntity
     {
         public int Total { get; set; }
         public int Wins { get; set; }
