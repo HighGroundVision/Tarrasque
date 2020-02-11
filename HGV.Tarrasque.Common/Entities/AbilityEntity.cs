@@ -7,7 +7,6 @@ namespace HGV.Tarrasque.Common.Entities
 {
     public class AbilityEntity : TableEntity
     {
-        public DateTime Date { get; set; }
         public int AbilityId { get; set; }
         public string AbilityName { get; set; }
         public int Total { get; set; }

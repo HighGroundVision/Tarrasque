@@ -7,7 +7,6 @@ namespace HGV.Tarrasque.Common.Entities
 {
     public class HeroEntity : TableEntity
     {
-        public DateTime Date { get; set; }
         public int HeroId { get; set; }
         public string HeroName { get; set; }
         public int Total { get; set; }

@@ -7,7 +7,6 @@ namespace HGV.Tarrasque.Common.Entities
 {
     public class RegionEntity : TableEntity
     {
-        public DateTime Date { get; set; }
         public int RegionId { get; set; }
         public string RegionName { get; set; }
         public int Total { get; set; }

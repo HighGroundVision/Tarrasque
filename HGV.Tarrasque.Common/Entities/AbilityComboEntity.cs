@@ -5,7 +5,6 @@ namespace HGV.Tarrasque.Common.Entities
 {
     public class AbilityComboEntity : TableEntity
     {
-        public DateTime Date { get; set; }
         public int PrimaryAbilityId { get; set; }
         public string PrimaryAbilityName { get; set; }
         public int ComboAbilityId { get; set; }
