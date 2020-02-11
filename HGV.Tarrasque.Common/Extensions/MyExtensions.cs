@@ -79,25 +79,37 @@ namespace HGV.Tarrasque.Common.Extensions
         public static IList<Ability> GetSkills(this HGV.Daedalus.GetMatchDetails.Player player)
         {
             var skills = MetaClient.Instance.Value.GetSkills();
-            return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(skills, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
+            if (player.ability_upgrades == null)
+                return new List<Ability>();
+            else
+                return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(skills, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
         }
 
         public static IList<Talent> GetTalenets(this HGV.Daedalus.GetMatchDetails.Player player)
         {
             var talents = MetaClient.Instance.Value.GetTalents();
-            return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(talents, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
+            if (player.ability_upgrades == null)
+                return new List<Talent>();
+            else
+                return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(talents, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
         }
 
         public static IList<Ability> GetAbilities(this HGV.Daedalus.GetMatchDetails.Player player)
         {
             var abilities = MetaClient.Instance.Value.GetAbilities();
-            return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(abilities, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
+            if (player.ability_upgrades == null)
+                return new List<Ability>();
+            else
+                return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(abilities, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
         }
 
         public static IList<Ability> GetUltimates(this HGV.Daedalus.GetMatchDetails.Player player)
         {
             var ultimates = MetaClient.Instance.Value.GetUltimates();
-            return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(ultimates, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
+            if (player.ability_upgrades == null)
+                return new List<Ability>();
+            else
+                return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(ultimates, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
         }
 
         public static IEnumerable<Tuple<Ability, Ability>> GetPairs(this HGV.Daedalus.GetMatchDetails.Player player)
