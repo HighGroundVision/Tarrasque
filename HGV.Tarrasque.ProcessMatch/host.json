@@ -1,9 +1,3 @@
 {
-  "version": "2.0",
-  "extensions": {
-    "queues": {
-      "batchSize": 1,
-      "newBatchThreshold": 1
-    }
-  }
+  "version": "2.0"
 }

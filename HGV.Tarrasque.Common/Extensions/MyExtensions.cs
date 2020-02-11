@@ -7,6 +7,7 @@ namespace HGV.Tarrasque.Common.Extensions
 {
     public static class MyExtensions
     {
+
         public static int GetRegion(this HGV.Daedalus.GetMatchDetails.Match match)
         {
             return MetaClient.Instance.Value.GetRegionId(match.cluster);

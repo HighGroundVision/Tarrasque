@@ -1,20 +1,15 @@
-﻿using Dawn;
-using HGV.Basilius;
+﻿using HGV.Basilius;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
-using HGV.Tarrasque.Common.Models;
 using HGV.Tarrasque.ProcessMatch.Entities;
+using Humanizer;
+using Humanizer.Localisation;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
-using Polly;
+using MoreLinq.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.ProcessMatch.Services
@@ -38,22 +33,34 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             tasks.Add(UpdateAbilityCombos(match, binder, log));
             await Task.WhenAll(tasks);
 
-            var delta = (DateTime.Now - start);
-            log.LogWarning($"ProcessMatch: {delta}");
+            var delta = (DateTime.Now - start).Humanize(maxUnit: TimeUnit.Minute, minUnit: TimeUnit.Second);
+            log.LogWarning($"Processed Match in {delta}");
         }
 
         private static async Task UpdateRegion(Match match, IBinder binder, ILogger log)
         {
             try
             {
-                var timestamp = match.GetDate();
-                var region = match.GetRegion().ToString();
+                var regionId = match.GetRegion();
+                var regionName = MetaClient.Instance.Value.GetRegionName(regionId);
+
+                var partitionKey = match.GetDate();
+                var rowKey = regionId.ToString();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVRegions"));
-                var result = await table.ExecuteAsync(TableOperation.Retrieve<RegionEntity>(timestamp, region));
+                var result = await table.ExecuteAsync(TableOperation.Retrieve<RegionEntity>(partitionKey, rowKey));
                 var entity = result.Result as RegionEntity;
                 if (entity == null)
-                    entity = new RegionEntity() { PartitionKey = timestamp, RowKey = region };
+                {
+                    entity = new RegionEntity()
+                    {
+                        PartitionKey = partitionKey,
+                        RowKey = rowKey,
+                        Timestamp = partitionKey,
+                        RegionId = regionId,
+                        RegionName = regionName
+                    };
+                }
 
                 entity.Total++;
 
@@ -72,15 +79,26 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVHeroes"));
+                var batch = new TableBatchOperation();
 
                 foreach (var player in match.players)
                 {
-                    var rowKey = player.hero_id.ToString();
+                    var hero = player.GetHero();
+                    var rowKey = hero.Id.ToString();
 
                     var result = await table.ExecuteAsync(TableOperation.Retrieve<HeroEntity>(partitionKey, rowKey));
                     var entity = result.Result as HeroEntity;
                     if (entity == null)
-                        entity = new HeroEntity() { PartitionKey = partitionKey, RowKey = rowKey };
+                    {
+                        entity = new HeroEntity()
+                        {
+                            PartitionKey = partitionKey,
+                            RowKey = rowKey,
+                            Timestamp = partitionKey,
+                            HeroId = hero.Id,
+                            HeroName = hero.Name
+                        };
+                    }
 
                     // Update Total Count
                     entity.Total++;
@@ -94,8 +112,10 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                     // Compute Win Rate
                     entity.WinRate = (float)entity.Wins / (float)entity.Total;
 
-                    await table.ExecuteAsync(TableOperation.InsertOrMerge(entity));
+                    batch.Add(TableOperation.InsertOrMerge(entity));
                 }
+
+                await table.ExecuteBatchAsync(batch);
             }
             catch (Exception ex)
             {
@@ -110,6 +130,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVAbilities"));
+                var batch = new TableBatchOperation();
 
                 foreach (var player in match.players)
                 {
@@ -121,8 +142,17 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                         var result = await table.ExecuteAsync(TableOperation.Retrieve<AbilityEntity>(partitionKey, rowKey));
                         var entity = result.Result as AbilityEntity;
                         if (entity == null)
-                            entity = new AbilityEntity() { PartitionKey = partitionKey, RowKey = rowKey };
-
+                        {
+                            entity = new AbilityEntity()
+                            {
+                                PartitionKey = partitionKey,
+                                RowKey = rowKey,
+                                Timestamp = partitionKey,
+                                AbilityId = ability.Id,
+                                AbilityName = ability.Name
+                            };
+                        }
+                            
                         // Update Total Count
                         entity.Total++;
 
@@ -142,52 +172,11 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                         // Compute Win Rate
                         entity.WinRate = (float)entity.Wins / (float)entity.Total;
 
-                        await table.ExecuteAsync(TableOperation.InsertOrMerge(entity));
+                        batch.Add(TableOperation.InsertOrMerge(entity));
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex.Message);
-            }
-        }
 
-        private static async Task UpdateTalents(Match match, IBinder binder, ILogger log)
-        {
-            //TODO: Not Working Investigate why...
-            try
-            {
-                var partitionKey = match.GetDate();
-
-                var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVTalents"));
-
-                foreach (var player in match.players)
-                {
-                    var talents = player.GetTalenets();
-                    foreach (var talent in talents)
-                    {
-                        var rowKey = talent.Id.ToString();
-
-                        var result = await table.ExecuteAsync(TableOperation.Retrieve<TalentEntity>(partitionKey, rowKey));
-                        var entity = result.Result as TalentEntity;
-                        if (entity == null)
-                            entity = new TalentEntity() { PartitionKey = partitionKey, RowKey = rowKey };
-
-                        // Update Total Count
-                        entity.Total++;
-
-                        // Update Win Count only if Victory
-                        if (match.Victory(player))
-                            entity.Wins++;
-                        else
-                            entity.Losses++;
-
-                        // Compute Win Rate
-                        entity.WinRate = (float)entity.Wins / (float)entity.Total;
-
-                        await table.ExecuteAsync(TableOperation.InsertOrMerge(entity));
-                    }
-                }
+                await table.ExecuteBatchAsync(batch);
             }
             catch (Exception ex)
             {
@@ -202,18 +191,31 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVHeroCombos"));
+                var batch = new TableBatchOperation();
 
                 foreach (var player in match.players)
                 {
+                    var hero = player.GetHero();
                     var skills = player.GetSkills();
                     foreach (var ability in skills)
                     {
-                        var rowKey = $"{player.hero_id}-{ability.Id}";
+                        var rowKey = $"{hero.Id}-{ability.Id}";
 
                         var result = await table.ExecuteAsync(TableOperation.Retrieve<HeroComboEntity>(partitionKey, rowKey));
                         var entity = result.Result as HeroComboEntity;
                         if (entity == null)
-                            entity = new HeroComboEntity() { PartitionKey = partitionKey, RowKey = rowKey };
+                        {
+                            entity = new HeroComboEntity() 
+                            {
+                                PartitionKey = partitionKey, 
+                                RowKey = rowKey,
+                                Timestamp = partitionKey,
+                                AbilityId = ability.Id,
+                                AbilityName = ability.Name,
+                                HeroId = hero.Id,
+                                HeroName = hero.Name
+                            };
+                        }
 
                         // Update Total Count
                         entity.Total++;
@@ -227,9 +229,11 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                         // Compute Win Rate
                         entity.WinRate = (float)entity.Wins / (float)entity.Total;
 
-                        await table.ExecuteAsync(TableOperation.InsertOrMerge(entity));
+                        batch.Add(TableOperation.InsertOrMerge(entity));
                     }
                 }
+
+                await table.ExecuteBatchAsync(batch);
             }
             catch (Exception ex)
             {
@@ -244,23 +248,36 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVAbilityCombos"));
+                var collection = new List<TableOperation>();
 
                 foreach (var player in match.players)
                 {
                     var skills = player.GetPairs();
                     foreach (var pair in skills)
                     {
-                        var collection = new List<string>()
+                        var reflection = new List<(Ability Primary, Ability Combo)>()
                         {
-                            $"{pair.Item1.Id}-{pair.Item2.Id}",
-                            $"{pair.Item2.Id}-{pair.Item1.Id}"
+                            ( Primary : pair.Item1, Combo : pair.Item2 ),
+                            ( Primary : pair.Item2, Combo : pair.Item1 )
                         };
-                        foreach (var rowKey in collection)
+                        foreach (var item in reflection)
                         {
+                            var rowKey = $"{item.Primary.Id}-{item.Combo.Id}";
                             var result = await table.ExecuteAsync(TableOperation.Retrieve<AbilityComboEntity>(partitionKey, rowKey));
                             var entity = result.Result as AbilityComboEntity;
                             if (entity == null)
-                                entity = new AbilityComboEntity() { PartitionKey = partitionKey, RowKey = rowKey };
+                            {
+                                entity = new AbilityComboEntity() 
+                                {
+                                    PartitionKey = partitionKey,
+                                    RowKey = rowKey,
+                                    Timestamp = partitionKey,
+                                    PrimaryAbilityId = item.Primary.Id,
+                                    PrimaryAbilityName = item.Primary.Name,
+                                    ComboAbilityId = item.Combo.Id,
+                                    ComboAbilityName = item.Combo.Name,
+                                };
+                            }
 
                             // Update Total Count
                             entity.Total++;
@@ -274,9 +291,20 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                             // Compute Win Rate
                             entity.WinRate = (float)entity.Wins / (float)entity.Total;
 
-                            await table.ExecuteAsync(TableOperation.InsertOrMerge(entity));
+                            collection.Add(TableOperation.InsertOrMerge(entity));
                         }
                     }
+                }
+
+                var batches = collection.Batch(99);
+                foreach (var batch in batches)
+                {
+                    var operation = new TableBatchOperation();
+
+                    foreach (var item in batch)
+                        operation.Add(item);
+
+                    await table.ExecuteBatchAsync(operation);
                 }
             }
             catch (Exception ex)

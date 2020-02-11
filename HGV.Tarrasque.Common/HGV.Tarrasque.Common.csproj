@@ -23,8 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HGV.Basilius" Version="3.0.54" />
-    <PackageReference Include="HGV.Daedalus" Version="2.0.17" />
+    <PackageReference Include="HGV.Basilius" Version="3.0.55" />
+    <PackageReference Include="HGV.Daedalus" Version="2.0.18" />
+    <PackageReference Include="morelinq" Version="3.3.2" />
   </ItemGroup>
 
 </Project>

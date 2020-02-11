@@ -6,11 +6,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dawn.Guard" Version="1.10.0" />
-    <PackageReference Include="HGV.Daedalus" Version="2.0.17" />
+    <PackageReference Include="HGV.Daedalus" Version="2.0.18" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.10" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="3.0.1" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.2" />
+    <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="Polly" Version="7.2.0" />
   </ItemGroup>
   <ItemGroup>
