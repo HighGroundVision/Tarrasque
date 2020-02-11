@@ -1,7 +1,7 @@
 ﻿using HGV.Basilius;
 using HGV.Daedalus.GetMatchDetails;
+using HGV.Tarrasque.Common.Entities;
 using HGV.Tarrasque.Common.Extensions;
-using HGV.Tarrasque.ProcessMatch.Entities;
 using Humanizer;
 using Humanizer.Localisation;
 using Microsoft.Azure.WebJobs;
@@ -44,6 +44,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 var regionId = match.GetRegion();
                 var regionName = MetaClient.Instance.Value.GetRegionName(regionId);
 
+                var date = match.GetStart().Date;
                 var partitionKey = match.GetDate();
                 var rowKey = regionId.ToString();
 
@@ -56,7 +57,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                     {
                         PartitionKey = partitionKey,
                         RowKey = rowKey,
-                        Timestamp = partitionKey,
+                        Date = date,
                         RegionId = regionId,
                         RegionName = regionName
                     };
@@ -76,6 +77,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
         {
             try
             {
+                var date = match.GetStart().Date;
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVHeroes"));
@@ -94,7 +96,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                         {
                             PartitionKey = partitionKey,
                             RowKey = rowKey,
-                            Timestamp = partitionKey,
+                            Date = date,
                             HeroId = hero.Id,
                             HeroName = hero.Name
                         };
@@ -127,6 +129,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
         {
             try
             {
+                var date = match.GetStart().Date;
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVAbilities"));
@@ -147,7 +150,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                             {
                                 PartitionKey = partitionKey,
                                 RowKey = rowKey,
-                                Timestamp = partitionKey,
+                                Date = date,
                                 AbilityId = ability.Id,
                                 AbilityName = ability.Name
                             };
@@ -188,6 +191,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
         {
             try
             {
+                var date = match.GetStart().Date;
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVHeroCombos"));
@@ -209,7 +213,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                             {
                                 PartitionKey = partitionKey, 
                                 RowKey = rowKey,
-                                Timestamp = partitionKey,
+                                Date = date,
                                 AbilityId = ability.Id,
                                 AbilityName = ability.Name,
                                 HeroId = hero.Id,
@@ -245,6 +249,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
         {
             try
             {
+                var date = match.GetStart().Date;
                 var partitionKey = match.GetDate();
 
                 var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVAbilityCombos"));
@@ -271,7 +276,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                                 {
                                     PartitionKey = partitionKey,
                                     RowKey = rowKey,
-                                    Timestamp = partitionKey,
+                                    Date = date,
                                     PrimaryAbilityId = item.Primary.Id,
                                     PrimaryAbilityName = item.Primary.Name,
                                     ComboAbilityId = item.Combo.Id,

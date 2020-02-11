@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="HGV.Basilius" Version="3.0.55" />
     <PackageReference Include="HGV.Daedalus" Version="2.0.18" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.10" />
     <PackageReference Include="morelinq" Version="3.3.2" />
   </ItemGroup>
 

@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.ProcessMatch.Entities
+namespace HGV.Tarrasque.Common.Entities
 {
     public class AbilityEntity : TableEntity
     {
-        public string Timestamp { get; set; }
+        public DateTime Date { get; set; }
         public int AbilityId { get; set; }
         public string AbilityName { get; set; }
         public int Total { get; set; }

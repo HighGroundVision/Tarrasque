@@ -1,13 +1,11 @@
 ﻿using Microsoft.WindowsAzure.Storage.Table;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace HGV.Tarrasque.ProcessMatch.Entities
+namespace HGV.Tarrasque.Common.Entities
 {
     public class AbilityComboEntity : TableEntity
     {
-        public string Timestamp { get; set; }
+        public DateTime Date { get; set; }
         public int PrimaryAbilityId { get; set; }
         public string PrimaryAbilityName { get; set; }
         public int ComboAbilityId { get; set; }
