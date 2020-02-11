@@ -56,6 +56,7 @@ namespace HGV.Tarrasque.Api.Functions
             return new OkObjectResult(json);
         }
 
+        /*
         [FunctionName("FnRegionCounts")]
         public async Task<IActionResult> GetRegionCounts(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "daily/region/{region}/{date}")] HttpRequest req,
@@ -68,5 +69,6 @@ namespace HGV.Tarrasque.Api.Functions
             var json = await reader.ReadToEndAsync();
             return new OkObjectResult(json);
         }
+        */
     }
 }

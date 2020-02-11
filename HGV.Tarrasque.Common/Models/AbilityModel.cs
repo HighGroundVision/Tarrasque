@@ -8,7 +8,7 @@ namespace HGV.Tarrasque.Common.Models
     {
         public int AbilityId { get; set; }
         public string AbilityName { get; set; }
-        public string Date { get; set; }
+        public string Timestamp { get; set; }
         public int Total { get; set; }
         public int Wins { get; set; }
         public int Losses { get { return Total - Wins; } }
