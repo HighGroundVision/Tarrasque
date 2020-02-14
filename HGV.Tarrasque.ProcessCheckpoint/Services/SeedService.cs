@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HGV.Tarrasque.Api.Services
+namespace HGV.Tarrasque.ProcessCheckpoint.Services
 {
     public interface ISeedService
     {

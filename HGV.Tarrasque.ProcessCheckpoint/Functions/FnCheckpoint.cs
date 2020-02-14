@@ -1,14 +1,12 @@
 using HGV.Daedalus.GetMatchDetails;
-using HGV.Tarrasque.Common.Exceptions;
 using HGV.Tarrasque.Common.Helpers;
-using HGV.Tarrasque.Common.Models;
-using HGV.Tarrasque.ProcessCheckpoint.Entities;
 using HGV.Tarrasque.ProcessCheckpoint.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -16,13 +14,13 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Functions
 {
     public class FnCheckpoint
     {
-        private readonly ICollectService _service;
-        private readonly DurableCircuitBreakerClient _circuitBreaker;
+        private readonly ICollectService collectionService;
+        private readonly ISeedService seedService;
 
-        public FnCheckpoint(ICollectService service)
+        public FnCheckpoint(ICollectService collectionService, ISeedService seedService)
         {
-            _service = service;
-            _circuitBreaker = new DurableCircuitBreakerClient("cb283EFF96DC4646349FCE26D6608B63C5");
+            this.collectionService = collectionService;
+            this.seedService = seedService;
         }
 
         [FunctionName("FnCheckpoint")]
@@ -35,71 +33,39 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Functions
         {
             using (new Timer("FnCheckpoint", log))
             {
-                var checkpoint = await GetCheckpoint(reader);
-                try
-                {
-                    await Collection(checkpoint, queue, client, log);
-                }
-                catch (ExecutionProhibitedException)
-                {
-                    await CircuitBroken(log);
-                }
-                catch (Exception ex)
-                {
-                    await LogFailire(client, log, ex);
-                }
-                finally
-                {
-                    await NextCheckpoint(checkpoint, writer);
-                }
+                await collectionService.ProcessCheckpoint(reader, writer, queue, client, log);
             }
         }
 
-        private static async Task<CheckpointModel> GetCheckpoint(TextReader readerCheckpoint)
+        [FunctionName("FnCheckpointStart")]
+        public async Task<IActionResult> CheckpointStart(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/start")] HttpRequest req,
+            [Blob("hgv-checkpoint/master.json")]TextReader reader,
+            [Blob("hgv-checkpoint/master.json")]TextWriter writer,
+            ILogger log)
         {
-            var json = await readerCheckpoint.ReadToEndAsync();
-            var checkpoint = JsonConvert.DeserializeObject<CheckpointModel>(json);
-            return checkpoint;
+            var reset = req.Query.ContainsKey("reset");
+            if (reader == null || reset == true)
+            {
+                await seedService.SeedCheckpoint(writer);
+            }
+            else
+            {
+                var json = await reader.ReadToEndAsync();
+                await writer.WriteAsync(json);
+            }
+
+            return new OkResult();
         }
 
-        private async Task Collection(CheckpointModel checkpoint, 
-            IAsyncCollector<Match> queueMatches,
-            IDurableClient client, 
-            ILogger log
-        )
+        [FunctionName("FnCheckpointStatus")]
+        public async Task<IActionResult> CheckpointStatus(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/status")] HttpRequest req,
+            [Blob("hgv-checkpoint/master.json")]TextReader reader,
+            ILogger log)
         {
-            var isPermitted = await _circuitBreaker.IsExecutionPermitted(client, log);
-            if (isPermitted == false)
-                throw new ExecutionProhibitedException();
-
-            var matches = await _service.Collect(checkpoint, log);
-            foreach (var item in matches)
-                await queueMatches.AddAsync(item);
-
-            await _circuitBreaker.RecordSuccess(client, log);
-
-            await Task.Delay(TimeSpan.FromSeconds(3));
+            var json = await reader.ReadToEndAsync();
+            return new OkObjectResult(json);
         }
-
-        private async Task CircuitBroken(ILogger log)
-        {
-            log.LogWarning("CircuitBreaker: Broken");
-
-            await Task.Delay(TimeSpan.FromMinutes(5));
-        }
-
-        private async Task LogFailire(IDurableClient client, ILogger log, Exception ex)
-        {
-            log.LogError(ex.Message);
-
-            await _circuitBreaker.RecordFailure(client, log);
-        }
-
-        private async Task NextCheckpoint(CheckpointModel checkpoint, TextWriter writer)
-        {
-            var json = JsonConvert.SerializeObject(checkpoint);
-            await writer.WriteAsync(json);
-        }
-
     }
 }

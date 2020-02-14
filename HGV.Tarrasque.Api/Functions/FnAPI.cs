@@ -1,57 +1,19 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿
+using HGV.Tarrasque.Common.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Net.Http;
-using HGV.Daedalus;
-using HGV.Tarrasque.Api.Services;
-using HGV.Tarrasque.Common.Entities;
 
 namespace HGV.Tarrasque.Api.Functions
 {
     public class FnAPI
     {
-        private readonly ISeedService seedService;
 
-        public FnAPI(ISeedService service)
+        public FnAPI()
         {
-            this.seedService = service;
-        }
-
-        [FunctionName("FnCheckpointStart")]
-        public async Task<IActionResult> CheckpointStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/start")] HttpRequest req,
-            [Blob("hgv-checkpoint/master.json")]TextReader reader,
-            [Blob("hgv-checkpoint/master.json")]TextWriter writer,
-            ILogger log)
-        {
-            var reset = req.Query.ContainsKey("reset");
-            if (reader == null || reset == true)
-            {
-                await this.seedService.SeedCheckpoint(writer);
-            }
-            else
-            {
-                var json = await reader.ReadToEndAsync();
-                await writer.WriteAsync(json);
-            }
-
-            return new RedirectResult("/api/checkpoint/status", false);
-        }
-
-        [FunctionName("FnCheckpointStatus")]
-        public async Task<IActionResult> CheckpointStatus(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "checkpoint/status")] HttpRequest req,
-            [Blob("hgv-checkpoint/master.json")]TextReader reader,
-            ILogger log)
-        {
-            var json = await reader.ReadToEndAsync();
-            return new OkObjectResult(json);
         }
 
         [FunctionName("FnRegionCounts")]

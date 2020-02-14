@@ -18,6 +18,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint
             builder.Services.AddSingleton<ISteamKeyProvider, SteamKeyProvider>();
             builder.Services.AddSingleton<IDotaApiClient, DotaApiClient>();
             builder.Services.AddSingleton<ICollectService, CollectService>();
+            builder.Services.AddSingleton<ISeedService, SeedService>();
         }
     }
 }
