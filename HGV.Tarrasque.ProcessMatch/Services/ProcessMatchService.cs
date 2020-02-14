@@ -2,8 +2,6 @@
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Entities;
 using HGV.Tarrasque.Common.Extensions;
-using Humanizer;
-using Humanizer.Localisation;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -23,7 +21,6 @@ namespace HGV.Tarrasque.ProcessMatch.Services
     {
         public async Task ProcessMatch(Match match, IBinder binder, ILogger log)
         {
-            var start = DateTime.Now;
             var tasks = new List<Task>();
 
             tasks.Add(UpdateRegion(match, binder, log));
@@ -32,9 +29,6 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             tasks.Add(UpdateHeroCombos(match, binder, log));
             tasks.Add(UpdateAbilityCombos(match, binder, log));
             await Task.WhenAll(tasks);
-
-            var delta = (DateTime.Now - start).Humanize(maxUnit: TimeUnit.Minute, minUnit: TimeUnit.Second);
-            log.LogWarning($"Processed Match in {delta}");
         }
 
         private static async Task UpdateRegion(Match match, IBinder binder, ILogger log)

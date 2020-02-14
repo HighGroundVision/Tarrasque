@@ -16,12 +16,10 @@ namespace HGV.Tarrasque.Api.Functions
 {
     public class FnAPI
     {
-        private readonly IDotaApiClient apiClient;
         private readonly ISeedService seedService;
 
-        public FnAPI(IDotaApiClient client, ISeedService service)
+        public FnAPI(ISeedService service)
         {
-            this.apiClient = client;
             this.seedService = service;
         }
 

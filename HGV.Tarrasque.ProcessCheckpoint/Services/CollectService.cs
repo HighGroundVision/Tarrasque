@@ -1,24 +1,21 @@
 ﻿using Dawn;
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
+using HGV.Tarrasque.Common.Exceptions;
 using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Polly;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.ProcessCheckpoint.Services
 {
     public interface ICollectService
-    {    
-        Task Collect(TextReader reader, TextWriter writer,IAsyncCollector<Match> queue, ILogger log);
+    {
+        Task<List<Match>> Collect(CheckpointModel checkpoint, ILogger log);
     }
 
     public class CollectService : ICollectService
@@ -30,61 +27,39 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             this.apiClient = client;
         }
 
-        public async Task Collect(TextReader reader, TextWriter writer, IAsyncCollector<Match> queue, ILogger log)
+        public async Task<List<Match>> Collect(CheckpointModel checkpoint, ILogger log)
         {
-            Guard.Argument(reader, nameof(reader)).NotNull();
-            Guard.Argument(writer, nameof(writer)).NotNull();
-            Guard.Argument(queue, nameof(queue)).NotNull();
+            Guard.Argument(checkpoint, nameof(checkpoint)).NotNull();
+            Guard.Argument(log, nameof(log)).NotNull();
 
-            var input = await reader.ReadToEndAsync();
-            var checkpoint = JsonConvert.DeserializeObject<CheckpointModel>(input);
+            var matches = await GetMatches(checkpoint.Latest, log);
 
-            var matches = await TryGetMatches(checkpoint.Latest);
+            var queue = matches.Where(_ => _.game_mode == 18).ToList();
 
+            checkpoint.Total += queue.Count;
             checkpoint.Batch = matches.Count();
+            checkpoint.Delta = (DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd())).ToString("c");
+            checkpoint.Latest = matches.Max(_ => _.match_seq_num) + 1;
 
-            var split = DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd());
-            checkpoint.Delta = split.ToString("c");
-
-            var max = matches.Max(_ => _.match_seq_num);
-            checkpoint.Latest = max + 1;
-
-            foreach (var match in matches)
-            {
-                if(match.game_mode == 18)
-                {
-                    checkpoint.Total++;
-                    await queue.AddAsync(match);
-                    break;
-                }
-            }
-
-            var output = JsonConvert.SerializeObject(checkpoint);
-            await writer.WriteAsync(output);
-
-            var timeout = (int)Math.Round(((100.0f - checkpoint.Batch) / 100.0f) * 15.0f);
-            await Task.Delay(TimeSpan.FromSeconds(timeout));
+            return queue;
         }
 
-        private async Task<List<Match>> TryGetMatches(ulong latest)
+        private async Task<List<Match>> GetMatches(ulong latest, ILogger log)
         {
             var policy = Policy
-                 .Handle<Exception>()
-                 .WaitAndRetryAsync(new[]
-                 {
-                    TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(10),
-                    TimeSpan.FromSeconds(30),
-                 });
+                .Handle<BelowLimitException>()
+                .WaitAndRetryForeverAsync(
+                    retryAttempt => TimeSpan.FromSeconds(10),
+                    (ex, timeout) => log.LogDebug(ex.Message)
+                );
 
-            var collection = await policy.ExecuteAsync<List<Match>>(async () =>
+            var collection = await policy.ExecuteAsync<List<Match>>(async () => 
             {
                 var matches = await this.apiClient.GetMatchesInSequence(latest);
-
-                if (matches.Count == 0)
-                    throw new ApplicationException("No Matches Returned from API");
-
-                return matches;
+                if (matches.Count < 100)
+                    throw new BelowLimitException();
+                else
+                    return matches;
             });
 
             return collection;

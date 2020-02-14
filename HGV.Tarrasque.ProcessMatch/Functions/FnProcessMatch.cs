@@ -1,4 +1,5 @@
 using HGV.Daedalus.GetMatchDetails;
+using HGV.Tarrasque.Common.Helpers;
 using HGV.Tarrasque.ProcessMatch.Services;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,10 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
             IBinder binder,
             ILogger log)
         {
-            await _service.ProcessMatch(match, binder, log);
+            using (new Timer("FnProcessMatch", log))
+            {
+                await _service.ProcessMatch(match, binder, log);
+            }
         }
     }
 }

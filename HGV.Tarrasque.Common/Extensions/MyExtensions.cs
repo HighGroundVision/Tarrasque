@@ -15,7 +15,7 @@ namespace HGV.Tarrasque.Common.Extensions
 
         public static string GetDate(this HGV.Daedalus.GetMatchDetails.Match match)
         {
-            return GetStart(match).Date.ToString("yy-MM-dd");
+            return GetStart(match).ToString("yy-MM-dd");
         }
 
         public static DateTimeOffset GetStart(this HGV.Daedalus.GetMatchDetails.Match match)
