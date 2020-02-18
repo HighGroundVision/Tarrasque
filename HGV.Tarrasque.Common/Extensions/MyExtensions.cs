@@ -71,6 +71,12 @@ namespace HGV.Tarrasque.Common.Extensions
             return (ulong)player.account_id + 76561197960265728L;
         }
 
+        public static int GetTeam(this HGV.Daedalus.GetMatchDetails.Player player)
+        {
+            return player.player_slot < 5 ? 0 : 1;
+        }
+
+
         public static Hero GetHero(this HGV.Daedalus.GetMatchDetails.Player player)
         {
             var heroes = MetaClient.Instance.Value.GetHeroes();

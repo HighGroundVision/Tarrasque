@@ -1,4 +1,3 @@
-using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Helpers;
 using HGV.Tarrasque.ProcessCheckpoint.Services;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Queue;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -27,7 +27,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Functions
         public async Task Checkpoint(
             [BlobTrigger("hgv-checkpoint/master.json")]TextReader reader,
             [Blob("hgv-checkpoint/master.json")]TextWriter writer,
-            [Queue("hgv-ad-matches")]IAsyncCollector<Match> queue,
+            [Queue("hgv-ad-matches")]CloudQueue queue,
             [DurableClient]IDurableClient client,
             ILogger log)
         {

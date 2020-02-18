@@ -9,11 +9,13 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
 {
     public class FnProcessMatch
     {
-        private readonly IProcessMatchService _service;
+        private readonly IProcessMatchService _matchService;
+        private readonly IProcessPlayersService _playersService;
 
-        public FnProcessMatch(IProcessMatchService service)
+        public FnProcessMatch(IProcessMatchService matchService, IProcessPlayersService playersService)
         {
-            _service = service;
+            _matchService = matchService;
+            _playersService = playersService;
         }
 
         [FunctionName("FnProcessMatch")]
@@ -24,7 +26,8 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
         {
             using (new Timer("FnProcessMatch", log))
             {
-                await _service.ProcessMatch(match, binder, log);
+                await _matchService.ProcessMatch(match, binder, log);
+                // await _playersService.ProcessMatch(match, binder, log);
             }
         }
     }

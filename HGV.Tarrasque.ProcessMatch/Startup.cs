@@ -17,6 +17,7 @@ namespace HGV.Tarrasque.ProcessMatch
             builder.Services.AddSingleton<ISteamKeyProvider, SteamKeyProvider>();
             builder.Services.AddSingleton<IDotaApiClient, DotaApiClient>();
             builder.Services.AddSingleton<IProcessMatchService, ProcessMatchService>();
+            builder.Services.AddSingleton<IProcessPlayersService, ProcessPlayersService>();
         }
     }
 }

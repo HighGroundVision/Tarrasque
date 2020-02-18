@@ -6,8 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dawn.Guard" Version="1.10.0" />
-    <PackageReference Include="HGV.Basilius" Version="3.0.56" />
-    <PackageReference Include="HGV.Daedalus" Version="2.0.18" />
+    <PackageReference Include="HGV.Daedalus" Version="2.0.19" />
     <PackageReference Include="Humanizer.Core" Version="2.7.9" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.1.1" />

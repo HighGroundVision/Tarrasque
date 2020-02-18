@@ -7,8 +7,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Table;
 using MoreLinq.Extensions;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IO;
+using Newtonsoft.Json;
+using HGV.Tarrasque.Common.Models;
+using HGV.Tarrasque.Common.Algorithms;
 
 namespace HGV.Tarrasque.ProcessMatch.Services
 {
@@ -28,6 +33,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             tasks.Add(UpdateAbilities(match, binder, log));
             tasks.Add(UpdateHeroCombos(match, binder, log));
             tasks.Add(UpdateAbilityCombos(match, binder, log));
+            tasks.Add(UpdatePlayers(match, binder, log));
             await Task.WhenAll(tasks);
         }
 
@@ -301,5 +307,88 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                 log.LogError(ex.Message);
             }
         }
+
+        private const long CATCH_ALL_ACCOUNT = 4294967295;
+        private static async Task UpdatePlayers(Match match, IBinder binder, ILogger log)
+        {
+            try
+            {
+                var table = await binder.BindAsync<CloudTable>(new TableAttribute("HGVPlayers"));
+                var partitionKey = match.GetRegion().ToString();
+
+                var collection = new List<PlayerRef>();
+                foreach (var player in match.players)
+                {
+                    if (player.account_id == CATCH_ALL_ACCOUNT)
+                        continue;
+
+                    var rowKey = player.account_id.ToString();
+                    var result = await table.ExecuteAsync(TableOperation.Retrieve<PlayerEntity>(partitionKey, rowKey));
+                    var entity = result.Result as PlayerEntity;
+                    if (entity == null)
+                    {
+                        entity = new PlayerEntity()
+                        {
+                            PartitionKey = partitionKey,
+                            RowKey = rowKey,
+                            AccountId = player.account_id,
+                            Persona = player.persona,
+                            SteamId = player.SteamId(),
+                            Ranking = 1000,
+                        };
+                    }
+
+                    // Update Total Count
+                    entity.Total++;
+
+                    // Update Win Count only if Victory
+                    if (match.Victory(player))
+                        entity.Wins++;
+                    else
+                        entity.Losses++;
+
+                    // Compute Win Rate
+                    entity.WinRate = (float)entity.Wins / (float)entity.Total;
+
+                    collection.Add(new PlayerRef() { Player = player, Data = entity });
+                }
+
+                if (collection.Count == 0)
+                    return;
+
+                var rankings = new Dictionary<ulong, double>();
+                foreach (var item in collection)
+                {
+                    var victory = match.Victory(item.Player);
+                    var myTeam = item.Player.GetTeam();
+                    var opponents = collection.Where(_ => _.Player.GetTeam() != myTeam);
+                    if (opponents.Count() > 0)
+                    {
+                        var avgRanking = opponents.Average(_ => _.Data.Ranking);
+                        var ranking = ELORankingSystem.Calucate(item.Data.Ranking, avgRanking, victory);
+                        rankings.Add(item.Player.account_id, ranking);
+                    }
+                    else
+                    {
+                        rankings.Add(item.Player.account_id, item.Data.Ranking);
+                    }
+                }
+
+                var batch = new TableBatchOperation();
+                foreach (var item in collection)
+                {
+                    item.Data.Ranking = rankings[item.Player.account_id];
+
+                    batch.Add(TableOperation.InsertOrMerge(item.Data));
+                }
+
+                await table.ExecuteBatchAsync(batch);
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex.Message);
+            }
+        }
+
     }
 }

@@ -5,9 +5,12 @@ using HGV.Tarrasque.Common.Exceptions;
 using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
 using HGV.Tarrasque.ProcessCheckpoint.Entities;
+using Humanizer;
+using Humanizer.Localisation;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
 using Polly;
 using System;
@@ -20,7 +23,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
 {
     public interface ICollectService
     {
-        Task ProcessCheckpoint(TextReader reader, TextWriter writer, IAsyncCollector<Match> queue, IDurableClient client, ILogger log);
+        Task ProcessCheckpoint(TextReader reader, TextWriter writer, CloudQueue queue, IDurableClient client, ILogger log);
     }
 
     public class CollectService : ICollectService
@@ -34,7 +37,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             this.circuitBreaker = new DurableCircuitBreakerClient("cb283EFF96DC4646349FCE26D6608B63C5");
         }
 
-        public async Task ProcessCheckpoint(TextReader reader, TextWriter writer, IAsyncCollector<Match> queue, IDurableClient client, ILogger log)
+        public async Task ProcessCheckpoint(TextReader reader, TextWriter writer, CloudQueue queue, IDurableClient client, ILogger log)
         {
             Guard.Argument(reader, nameof(reader)).NotNull();
             Guard.Argument(writer, nameof(writer)).NotNull();
@@ -70,10 +73,10 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             return checkpoint;
         }
 
-        private async Task Collection(CheckpointModel checkpoint, IAsyncCollector<Match> queueMatches, IDurableClient client, ILogger log)
+        private async Task Collection(CheckpointModel checkpoint, CloudQueue queue, IDurableClient client, ILogger log)
         {
             Guard.Argument(checkpoint, nameof(checkpoint)).NotNull();
-            Guard.Argument(queueMatches, nameof(queueMatches)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
             Guard.Argument(client, nameof(client)).NotNull();
             Guard.Argument(log, nameof(log)).NotNull();
 
@@ -81,13 +84,17 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             if (isPermitted == false)
                 throw new ExecutionProhibitedException();
 
-            var matches = await this.Collect(checkpoint, log);
+            var matches = await this.Collect(checkpoint, queue, log);
             foreach (var item in matches)
-                await queueMatches.AddAsync(item);
+            {
+                var json = JsonConvert.SerializeObject(item);
+                var msg = new CloudQueueMessage(json);
+                await queue.AddMessageAsync(msg);
+            }
 
             await this.circuitBreaker.RecordSuccess(client, log);
 
-            await Task.Delay(TimeSpan.FromSeconds(3));
+            await Task.Delay(TimeSpan.FromSeconds(5));
         }
 
         private async Task CircuitBroken(ILogger log)
@@ -119,22 +126,25 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             await writer.WriteAsync(json);
         }
 
-        private async Task<List<Match>> Collect(CheckpointModel checkpoint, ILogger log)
+        private async Task<List<Match>> Collect(CheckpointModel checkpoint, CloudQueue queue, ILogger log)
         {
             Guard.Argument(checkpoint, nameof(checkpoint)).NotNull();
+            Guard.Argument(queue, nameof(queue)).NotNull();
             Guard.Argument(log, nameof(log)).NotNull();
 
             // Get Data
+            await queue.FetchAttributesAsync();
             var matches = await GetMatches(checkpoint.Latest, log);
-            var queue = matches.Where(_ => _.game_mode == 18).ToList();
+            var collection = matches.Where(_ => _.game_mode == 18).ToList();
 
             // Update Checkpoint
-            checkpoint.Total += queue.Count;
+            checkpoint.Total += collection.Count;
             checkpoint.Batch = matches.Count();
-            checkpoint.Delta = (DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd())).ToString("c");
+            checkpoint.Delta = (DateTimeOffset.UtcNow - matches.Max(_ => _.GetEnd())).Humanize(2);
             checkpoint.Latest = matches.Max(_ => _.match_seq_num) + 1;
+            checkpoint.InQueue = queue.ApproximateMessageCount.GetValueOrDefault();
 
-            return queue;
+            return collection;
         }
 
         private async Task<List<Match>> GetMatches(ulong latest, ILogger log)

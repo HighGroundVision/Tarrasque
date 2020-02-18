@@ -10,5 +10,6 @@ namespace HGV.Tarrasque.Common.Models
         public string Delta { get; set; }
         public ulong Latest { get; set; }
         public int Total { get; set; }
+        public int InQueue { get; set; }
     }
 }
