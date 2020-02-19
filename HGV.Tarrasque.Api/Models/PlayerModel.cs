@@ -1,14 +1,15 @@
-﻿using Microsoft.WindowsAzure.Storage.Table;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.Common.Entities
+namespace HGV.Tarrasque.Api.Models
 {
-    public class PlayerEntity : TableEntity
+    public class PlayerModel
     {
+        public int RegionId { get; set; }
         public long AccountId { get; set; }
         public long SteamId { get; set; }
+        public string Persona { get; set; }
         public int Total { get; set; }
         public int Wins { get; set; }
         public int Losses { get; set; }

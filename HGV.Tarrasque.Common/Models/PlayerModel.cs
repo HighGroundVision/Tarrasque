@@ -8,7 +8,6 @@ namespace HGV.Tarrasque.Common.Models
     {
         public ulong AccountId { get; set; }
         public ulong SteamId { get; set; }
-        public string Persona { get; set; }
 
         public int Rating { get; set; }
         public int Total { get; set; }

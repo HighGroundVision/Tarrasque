@@ -24,6 +24,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
     public class ProcessMatchService : IProcessMatchService
     {
+        private const long CATCH_ALL_ACCOUNT = 4294967295;
+
         public async Task ProcessMatch(Match match, IBinder binder, ILogger log)
         {
             var tasks = new List<Task>();
@@ -33,7 +35,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             tasks.Add(UpdateAbilities(match, binder, log));
             tasks.Add(UpdateHeroCombos(match, binder, log));
             tasks.Add(UpdateAbilityCombos(match, binder, log));
-            tasks.Add(UpdatePlayers(match, binder, log));
+            tasks.Add(UpdatePlayerSummary(match, binder, log));
+            tasks.Add(UpdatePlayerDetails(match, binder, log));
             await Task.WhenAll(tasks);
         }
 
@@ -308,8 +311,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             }
         }
 
-        private const long CATCH_ALL_ACCOUNT = 4294967295;
-        private static async Task UpdatePlayers(Match match, IBinder binder, ILogger log)
+        private static async Task UpdatePlayerSummary(Match match, IBinder binder, ILogger log)
         {
             try
             {
@@ -331,9 +333,8 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                         {
                             PartitionKey = partitionKey,
                             RowKey = rowKey,
-                            AccountId = player.account_id,
-                            Persona = player.persona,
-                            SteamId = player.SteamId(),
+                            AccountId = (long)player.account_id,
+                            SteamId = (long)player.SteamId(),
                             Ranking = 1000,
                         };
                     }
@@ -348,7 +349,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                         entity.Losses++;
 
                     // Compute Win Rate
-                    entity.WinRate = (float)entity.Wins / (float)entity.Total;
+                    entity.WinRate = entity.Wins / (double)entity.Total;
 
                     collection.Add(new PlayerRef() { Player = player, Data = entity });
                 }
@@ -390,5 +391,89 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             }
         }
 
+        public static async Task UpdatePlayerDetails(Match match, IBinder binder, ILogger log)
+        {
+            foreach (var player in match.players)
+            {
+                if (player.account_id == CATCH_ALL_ACCOUNT)
+                    continue;
+
+                var attr = new BlobAttribute($"hgv-players/{player.account_id}.json");
+                var reader = await binder.BindAsync<TextReader>(attr);
+                if (reader == null)
+                    continue;
+
+                var input = await reader.ReadToEndAsync();
+                var model = JsonConvert.DeserializeObject<PlayerModel>(input);
+
+                try
+                {
+                    model.SteamId = player.SteamId();
+                    model.Total++;
+
+                    model.History.Add(new History()
+                    {
+                        MatchId = match.match_id,
+                        Date = match.GetStart(),
+                        Hero = player.hero_id,
+                        Victory = match.Victory(player),
+                        Abilities = player.GetAbilities().Select(_ => _.Id).ToList()
+                    });
+                    model.History = model.History.OrderByDescending(_ => _.Date).Take(1000).ToList();
+
+                    model.WinRate = (float)model.History.Count(_ => _.Victory) / (float)model.Total;
+
+                    foreach (var p in match.players)
+                    {
+                        if (p.account_id == CATCH_ALL_ACCOUNT)
+                            continue;
+
+                        if (p.account_id == player.account_id)
+                            continue;
+
+                        // If Exists
+                        var combatant = model.Combatants.Find(_ => _.AccountId == p.account_id);
+                        if (combatant == null)
+                        {
+                            combatant = new PlayerSummary()
+                            {
+                                AccountId = p.account_id,
+                                Persona = p.persona,
+                                SteamId = p.SteamId(),
+                            };
+                            model.Combatants.Add(combatant);
+                        }
+
+                        var history = new History()
+                        {
+                            MatchId = match.match_id,
+                            Date = match.GetStart(),
+                            Hero = p.hero_id,
+                            Victory = match.Victory(p),
+                            Abilities = p.GetAbilities().Select(_ => _.Id).ToList()
+                        };
+
+                        if (p.GetTeam() == player.GetTeam())
+                            combatant.With.Add(history);
+                        else
+                            combatant.Against.Add(history);
+
+                        combatant.With.OrderByDescending(_ => _.Date).Take(100).ToList();
+                        combatant.Against.OrderByDescending(_ => _.Date).Take(100).ToList();
+                        combatant.Friend = combatant.With.Count > 5;
+                    }
+
+                    model.Combatants = model.Combatants.OrderByDescending(_ => _.With.Count()).Take(100).ToList();
+                }
+                catch (Exception ex)
+                {
+                    log.LogError(ex.Message);
+                }
+
+                var output = JsonConvert.SerializeObject(model);
+                var writer = await binder.BindAsync<TextWriter>(attr);
+                await writer.WriteAsync(output);
+            }
+        }
     }
 }
