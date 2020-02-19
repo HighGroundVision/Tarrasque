@@ -45,11 +45,22 @@ namespace HGV.Tarrasque.Api.Functions
 
             var cachePolicy = policyRegistry.Get<IAsyncPolicy<List<HeroHistory>>>("FnHeroesHistory");
             var collection = await cachePolicy.ExecuteAsync(
-                context => heroService.GetHeroHistory(table, start, end), 
+                context => heroService.GetHeroHistory(start, end, table, log), 
                 new Context("FnHeroesHistory")
             );
 
             return new OkObjectResult(collection);
+        }
+
+        [FunctionName("FnHeroDetails")]
+        public async Task<IActionResult> GetHeroDetails(
+           [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "hero/{id}")] HttpRequest req,
+           int id,
+           IBinder binder,
+           ILogger log)
+        {
+            var model = await this.heroService.GetHeroDetails(id, binder, log);
+            return new OkObjectResult(model);
         }
     }
 }

@@ -32,6 +32,19 @@ namespace HGV.Tarrasque.Api
                     context => context.OperationKey + context["region"]
                 )
             );
+            registry.Add("FnSummaryRegionsCount",
+                Policy.CacheAsync(
+                    serviceProvider.GetRequiredService<IAsyncCacheProvider>().AsyncFor<List<RegionModel>>(),
+                    TimeSpan.FromMinutes(5)
+                )
+            );
+            registry.Add("FnDailyRegionsCount",
+                Policy.CacheAsync(
+                    serviceProvider.GetRequiredService<IAsyncCacheProvider>().AsyncFor<List<RegionModel>>(),
+                    TimeSpan.FromMinutes(5),
+                    context => context.OperationKey + context["date"]
+                )
+            );
             return registry;
         }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HGV.Tarrasque.Common.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -12,15 +13,8 @@ namespace HGV.Tarrasque.Api.Models
         public string Image { get; set; }
         public bool Enabled { get; set; }
         public string Primary { get; set; }
-
-        // Attributes Delta with other heroes
-        public List<object> Attributes { get; set; } = new List<object>();
-
-        // Hero Stats
-        public int Total { get; set; }
-        public int Wins { get; set; }
-        public int Losses { get; set; }
-        public float WinRate { get; set; }
+        public List<HeroDetailsAttribute> Attributes { get; set; } = new List<HeroDetailsAttribute>();
+        public List<HeroDetailsHistory> History { get; set; } = new List<HeroDetailsHistory>();
 
         // Heroes Default Abilities
         public List<object> Abilities { get; set; } = new List<object>();

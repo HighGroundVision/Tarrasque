@@ -29,6 +29,7 @@ namespace HGV.Tarrasque.Api
             builder.Services.AddSingleton<IDotaApiClient, DotaApiClient>();
             builder.Services.AddSingleton<IHeroService, HeroService>();
             builder.Services.AddSingleton<IPlayerService, PlayerService>();
+            builder.Services.AddSingleton<IRegionService, RegionService>();
         }
     }
 }
