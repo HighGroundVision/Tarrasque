@@ -85,8 +85,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
                 foreach (var player in match.players)
                 {
-                    var hero = player.GetHero();
-                    var rowKey = hero.Id.ToString();
+                    var rowKey = player.hero_id.ToString();
 
                     var result = await table.ExecuteAsync(TableOperation.Retrieve<HeroEntity>(partitionKey, rowKey));
                     var entity = result.Result as HeroEntity;
@@ -96,8 +95,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                         {
                             PartitionKey = partitionKey,
                             RowKey = rowKey,
-                            HeroId = hero.Id,
-                            HeroName = hero.Name
+                            HeroId = player.hero_id,
                         };
                     }
 
@@ -149,7 +147,6 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                                 PartitionKey = partitionKey,
                                 RowKey = rowKey,
                                 AbilityId = ability.Id,
-                                AbilityName = ability.Name
                             };
                         }
                             
@@ -210,9 +207,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                                 PartitionKey = partitionKey, 
                                 RowKey = rowKey,
                                 AbilityId = ability.Id,
-                                AbilityName = ability.Name,
                                 HeroId = hero.Id,
-                                HeroName = hero.Name
                             };
                         }
 
@@ -271,9 +266,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
                                     PartitionKey = partitionKey,
                                     RowKey = rowKey,
                                     PrimaryAbilityId = item.Primary.Id,
-                                    PrimaryAbilityName = item.Primary.Name,
                                     ComboAbilityId = item.Combo.Id,
-                                    ComboAbilityName = item.Combo.Name,
                                 };
                             }
 

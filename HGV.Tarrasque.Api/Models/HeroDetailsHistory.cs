@@ -10,6 +10,6 @@ namespace HGV.Tarrasque.Api.Models
         public int Total { get; set; }
         public int Wins { get; set; }
         public int Losses { get; set; }
-        public float WinRate { get; set; }
+        public double WinRate { get; set; }
     }
 }

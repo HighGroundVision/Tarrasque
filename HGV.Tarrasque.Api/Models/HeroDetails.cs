@@ -21,7 +21,7 @@ namespace HGV.Tarrasque.Api.Models
 
         // Heroes Talents
         // (List details add win rate later)
-        public List<object> Talents { get; set; } = new List<object>();
+        // public List<object> Talents { get; set; } = new List<object>();
 
         // Heroes Combos
         public List<object> Combos { get; set; } = new List<object>();

@@ -8,10 +8,9 @@ namespace HGV.Tarrasque.Common.Entities
     public class HeroEntity : TableEntity
     {
         public int HeroId { get; set; }
-        public string HeroName { get; set; }
         public int Total { get; set; }
         public int Wins { get; set; }
         public int Losses { get; set; }
-        public float WinRate { get; set; }
+        public double WinRate { get; set; }
     }
 }

@@ -115,12 +115,28 @@ namespace HGV.Tarrasque.Api.Services
         private async Task<List<HeroDetailsHistory>> GetHeroHistory(int id, IBinder binding, ILogger log)
         {
             var table = await binding.BindAsync<CloudTable>(new TableAttribute("HGVHeroes"));
-            var filter = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, $"{id}");
+            var filter = string.Empty;
             var dates = Enumerable.Range(1, 6).Select(_ => DateTime.UtcNow.AddDays(_ * -1).ToString("yy-MM-dd")).ToList();
             foreach (var date in dates)
             {
-                var condition = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, date);
-                filter = TableQuery.CombineFilters(filter, TableOperators.And, condition);
+                if(string.IsNullOrWhiteSpace(filter))
+                {
+                    filter = TableQuery.CombineFilters(
+                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, date),
+                        TableOperators.And,
+                        TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, $"{id}")
+                    );
+                }
+                else
+                {
+                    var condition = TableQuery.CombineFilters(
+                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, date),
+                        TableOperators.And,
+                        TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, $"{id}")
+                    );
+                    filter = TableQuery.CombineFilters(filter, TableOperators.Or, condition);
+                }
+                
             }
 
             var query = new TableQuery<HeroEntity>().Where(filter);
