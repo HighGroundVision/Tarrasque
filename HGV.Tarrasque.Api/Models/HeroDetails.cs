@@ -1,7 +1,4 @@
-﻿using HGV.Tarrasque.Common.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace HGV.Tarrasque.Api.Models
 {
@@ -16,14 +13,11 @@ namespace HGV.Tarrasque.Api.Models
         public List<HeroDetailsAttribute> Attributes { get; set; } = new List<HeroDetailsAttribute>();
         public List<HeroDetailsHistory> History { get; set; } = new List<HeroDetailsHistory>();
 
-        // Heroes Default Abilities
-        public List<object> Abilities { get; set; } = new List<object>();
-
+        public List<HeroDetailsAbility> Combos { get; set; } = new List<HeroDetailsAbility>();
+        public List<HeroDetailsAbility> Abilities { get; set; } = new List<HeroDetailsAbility>();
+        
         // Heroes Talents
         // (List details add win rate later)
         // public List<object> Talents { get; set; } = new List<object>();
-
-        // Heroes Combos
-        public List<object> Combos { get; set; } = new List<object>();
     }
 }

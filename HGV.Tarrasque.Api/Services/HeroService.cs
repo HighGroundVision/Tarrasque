@@ -106,8 +106,7 @@ namespace HGV.Tarrasque.Api.Services
             model.Enabled = hero.AbilityDraftEnabled;
             model.Attributes = factory.GetAttributes();
             model.History = await GetHeroHistory(id, binding, log);
-
-            // HeroComboEntity
+            model.Combos = await GetHeroCombos(id, binding, log);
 
             return model;
         }
@@ -159,6 +158,62 @@ namespace HGV.Tarrasque.Api.Services
             while (token != null);
 
             return collection.OrderByDescending(_ => _.Date).ToList();
+        }
+
+        private async Task<List<HeroDetailsAbility>> GetHeroCombos(int id, IBinder binding, ILogger log)
+        {
+            var table = await binding.BindAsync<CloudTable>(new TableAttribute("HGVHeroCombos"));
+
+            var collection = new List<HeroDetailsAbility>();
+            var abilities = MetaClient.Instance.Value.GetAbilities();
+            var ultimates = MetaClient.Instance.Value.GetUltimates();
+            var skills = abilities.Union(ultimates);
+
+            foreach (var ability in skills)
+            {
+                var filter = string.Empty;
+                var dates = Enumerable.Range(1, 6)
+                    .Select(_ => DateTime.UtcNow.AddDays(_ * -1).ToString("yy-MM-dd"))
+                    .ToList();
+
+                foreach (var date in dates)
+                {
+                    var condition = TableQuery.CombineFilters(
+                        TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, date),
+                        TableOperators.And,
+                        TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, $"{id}-{ability.Id}")
+                    );
+                    filter = string.IsNullOrWhiteSpace(filter) ? condition : TableQuery.CombineFilters(filter, TableOperators.Or, condition);
+                }
+     
+                /*
+                var date = "20-02-11"; // DateTime.UtcNow.AddDays(-1).ToString("yy-MM-dd");
+                var filter = TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, date),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, $"{id}-{ability.Id}")
+                );
+                */
+
+                var query = new TableQuery<HeroComboEntity>().Where(filter);
+                var segment = await table.ExecuteQuerySegmentedAsync<HeroComboEntity>(query, null);
+
+                if (segment.Results.Count == 0)
+                    continue;
+
+                var result = new HeroDetailsAbility()
+                {
+                    Id = ability.Id,
+                    Name = ability.Name,
+                    Image = ability.Image,
+                    Total = segment.Results.Sum(_ => _.Total),
+                    Wins = segment.Results.Sum(_ => _.Wins),
+                    Losses = segment.Results.Sum(_ => _.Losses),
+                };
+                collection.Add(result);
+            }
+            
+            return collection;
         }
     }
 }
