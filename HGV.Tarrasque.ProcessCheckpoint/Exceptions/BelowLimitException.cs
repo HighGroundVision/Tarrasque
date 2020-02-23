@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.Common.Exceptions
+namespace HGV.Tarrasque.ProcessCheckpoint.Exceptions
 {
     public class BelowLimitException : Exception
     {
