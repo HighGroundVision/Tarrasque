@@ -1,13 +1,11 @@
 ﻿using Dawn;
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
-using HGV.Tarrasque.Common.Exceptions;
 using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
 using HGV.Tarrasque.ProcessCheckpoint.Entities;
+using HGV.Tarrasque.ProcessCheckpoint.Exceptions;
 using Humanizer;
-using Humanizer.Localisation;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Queue;
