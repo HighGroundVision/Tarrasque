@@ -19,10 +19,11 @@ namespace HGV.Tarrasque.ProcessMatch.Functions
         [FunctionName("FnProcessMatch")]
         public async Task Process(
             [QueueTrigger("hgv-ad-matches")]Match match,
+            ExecutionContext context,
             IBinder binder,
             ILogger log)
         {
-            using (new Timer("FnProcessMatch", log))
+            using (new Timer($"Fn:{context.InvocationId}", log))
             {
                 await _matchService.ProcessMatch(match, binder, log);
             }

@@ -23,7 +23,7 @@ namespace HGV.Tarrasque.Common.Helpers
 
         public void Dispose()
         {
-            var delta = (DateTime.Now - this.start).Humanize(maxUnit: TimeUnit.Minute, minUnit: TimeUnit.Second);
+            var delta = (DateTime.Now - this.start).Humanize(maxUnit: TimeUnit.Minute, minUnit: TimeUnit.Millisecond);
             this.log.LogWarning($"Timer[{this.name}] took {delta}");
         }
     }

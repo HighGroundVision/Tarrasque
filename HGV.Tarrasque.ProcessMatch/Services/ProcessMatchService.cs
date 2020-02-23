@@ -14,6 +14,7 @@ using System.IO;
 using Newtonsoft.Json;
 using HGV.Tarrasque.Common.Models;
 using HGV.Tarrasque.Common.Algorithms;
+using HGV.Tarrasque.Common.Helpers;
 
 namespace HGV.Tarrasque.ProcessMatch.Services
 {
@@ -28,8 +29,16 @@ namespace HGV.Tarrasque.ProcessMatch.Services
 
         public async Task ProcessMatch(Match match, IBinder binder, ILogger log)
         {
-            var tasks = new List<Task>();
+            await UpdateRegion(match, binder, log);
+            await UpdateHeroes(match, binder, log);
+            await UpdateAbilities(match, binder, log);
+            await UpdateHeroCombos(match, binder, log);
+            await UpdateAbilityCombos(match, binder, log);
+            await UpdatePlayerSummary(match, binder, log);
+            await UpdatePlayerDetails(match, binder, log);
 
+            /*
+            var tasks = new List<Task>()
             tasks.Add(UpdateRegion(match, binder, log));
             tasks.Add(UpdateHeroes(match, binder, log));
             tasks.Add(UpdateAbilities(match, binder, log));
@@ -38,6 +47,7 @@ namespace HGV.Tarrasque.ProcessMatch.Services
             tasks.Add(UpdatePlayerSummary(match, binder, log));
             tasks.Add(UpdatePlayerDetails(match, binder, log));
             await Task.WhenAll(tasks);
+            */
         }
 
         private static async Task UpdateRegion(Match match, IBinder binder, ILogger log)

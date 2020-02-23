@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessCheckp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessMatch", "HGV.Tarrasque.ProcessMatch\HGV.Tarrasque.ProcessMatch.csproj", "{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.Custodian", "HGV.Tarrasque.Custodian\HGV.Tarrasque.Custodian.csproj", "{B2953127-E6DB-44C5-9360-3C96182444E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{701FE2CB-EC7D-451A-B0E1-D36D9B80BB4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2953127-E6DB-44C5-9360-3C96182444E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2953127-E6DB-44C5-9360-3C96182444E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2953127-E6DB-44C5-9360-3C96182444E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2953127-E6DB-44C5-9360-3C96182444E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
