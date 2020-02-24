@@ -53,18 +53,26 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
                 checkpoint.Latest = matches.Max(_ => _.match_seq_num) + 1;
                 checkpoint.InQueue = queue.ApproximateMessageCount.GetValueOrDefault();
 
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                foreach (var item in collection)
+                {
+                    var json = JsonConvert.SerializeObject(item);
+                    var msg = new CloudQueueMessage(json);
+                    await queue.AddMessageAsync(msg);
+                }
             }
             catch (BelowLimitException)
             {
+                log.LogError("Below Limit");
                 await Task.Delay(TimeSpan.FromMinutes(1));
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("429"))
             {
+                log.LogError("To Many Requests");
                 await Task.Delay(TimeSpan.FromSeconds(30));
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("500"))
             {
+                log.LogError("Service Error");
                 await Task.Delay(TimeSpan.FromMinutes(5));
             }
             catch (Exception ex)
