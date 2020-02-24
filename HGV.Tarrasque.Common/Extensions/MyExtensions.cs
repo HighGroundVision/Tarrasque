@@ -7,7 +7,42 @@ namespace HGV.Tarrasque.Common.Extensions
 {
     public static class MyExtensions
     {
+        public static bool Victory(this HGV.Daedalus.GetMatchDetails.Match match, HGV.Daedalus.GetMatchDetails.Player player)
+        {
+            return (match.radiant_win && player.player_slot < 5);
+        }
 
+        public static int PickPriority(this HGV.Daedalus.GetMatchDetails.Player player)
+        {
+            switch (player.player_slot)
+            {
+                case 0: return 0;
+                case 128: return 1;
+                case 1: return 2;
+                case 129: return 3;
+                case 2: return 4;
+                case 130: return 5;
+                case 3: return 6;
+                case 131: return 7;
+                case 4: return 8;
+                case 132: return 9;
+                default: return 0;
+            }
+        }
+
+        /*
+        DOTA_LEAVER_NONE = 0;
+	    DOTA_LEAVER_DISCONNECTED = 1;
+	    DOTA_LEAVER_DISCONNECTED_TOO_LONG = 2;
+	    DOTA_LEAVER_ABANDONED = 3;
+	    DOTA_LEAVER_AFK = 4;
+	    DOTA_LEAVER_NEVER_CONNECTED = 5;
+	    DOTA_LEAVER_NEVER_CONNECTED_TOO_LONG = 6;
+	    DOTA_LEAVER_FAILED_TO_READY_UP = 7;
+	    DOTA_LEAVER_DECLINED = 8;
+        */
+
+        /*
         public static int GetRegion(this HGV.Daedalus.GetMatchDetails.Match match)
         {
             return MetaClient.Instance.Value.GetRegionId(match.cluster);
@@ -127,5 +162,6 @@ namespace HGV.Tarrasque.Common.Extensions
                    where l1.Id < l2.Id
                    select Tuple.Create(l1, l2);
         }
+        */
     }
 }

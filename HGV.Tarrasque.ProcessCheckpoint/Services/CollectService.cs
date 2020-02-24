@@ -5,6 +5,7 @@ using HGV.Tarrasque.Common.Extensions;
 using HGV.Tarrasque.Common.Models;
 using HGV.Tarrasque.ProcessCheckpoint.Exceptions;
 using Humanizer;
+using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
@@ -19,7 +20,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
 {
     public interface ICollectService
     {
-        Task ProcessCheckpoint(TextReader reader, TextWriter writer, CloudQueue queue, ILogger log);
+        Task ProcessCheckpoint(TextReader reader, TextWriter writer, List<IAsyncCollector<Match>> queues, ILogger log);
     }
 
     public class CollectService : ICollectService
@@ -31,34 +32,31 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             this.apiClient = client;
         }
 
-        public async Task ProcessCheckpoint(TextReader reader, TextWriter writer, CloudQueue queue, ILogger log)
+        public async Task ProcessCheckpoint(TextReader reader, TextWriter writer, List<IAsyncCollector<Match>> queues, ILogger log)
         {
             Guard.Argument(reader, nameof(reader)).NotNull();
             Guard.Argument(writer, nameof(writer)).NotNull();
-            Guard.Argument(queue, nameof(queue)).NotNull();
+            Guard.Argument(queues, nameof(queues)).NotNull().NotEmpty();
             Guard.Argument(log, nameof(log)).NotNull();
 
             var checkpoint = await GetCheckpoint(reader);
 
             try
             {
-                var matches = await GetMatches(checkpoint.Latest, log);
-                var collection = matches.Where(_ => _.game_mode == 18).ToList();
-                var max = matches.Select(_ => _.start_time + _.duration).Max();
+                // Get Matches
+                var matches = await GetMatches(checkpoint.Latest);
+                var collection = GetValidAbilityDraftMatches(matches);
 
                 // Update Checkpoint
-                checkpoint.Total += collection.Count;
-                checkpoint.Batch = matches.Count();
-                checkpoint.Delta = (DateTimeOffset.UtcNow - DateTimeOffset.FromUnixTimeSeconds(max)).Humanize(2);
+                checkpoint.Total += matches.Count;
+                checkpoint.ADTotal += collection.Count;
+                checkpoint.Timestamp = collection.Max(_ => DateTimeOffset.FromUnixTimeSeconds(_.start_time + _.duration));
                 checkpoint.Latest = matches.Max(_ => _.match_seq_num) + 1;
-                checkpoint.InQueue = queue.ApproximateMessageCount.GetValueOrDefault();
 
+                // Queue
                 foreach (var item in collection)
-                {
-                    var json = JsonConvert.SerializeObject(item);
-                    var msg = new CloudQueueMessage(json);
-                    await queue.AddMessageAsync(msg);
-                }
+                    foreach (var q in queues)
+                        await q.AddAsync(item);
             }
             catch (BelowLimitException)
             {
@@ -85,17 +83,17 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
                 await NextCheckpoint(checkpoint, writer);
             }
         }
-
-        private async Task<CheckpointModel> GetCheckpoint(TextReader readerCheckpoint)
+     
+        private async Task<Checkpoint> GetCheckpoint(TextReader reader)
         {
-            Guard.Argument(readerCheckpoint, nameof(readerCheckpoint)).NotNull();
+            Guard.Argument(reader, nameof(reader)).NotNull();
 
-            var json = await readerCheckpoint.ReadToEndAsync();
-            var checkpoint = JsonConvert.DeserializeObject<CheckpointModel>(json);
+            var json = await reader.ReadToEndAsync();
+            var checkpoint = JsonConvert.DeserializeObject<Checkpoint>(json);
             return checkpoint;
         }
 
-        private async Task NextCheckpoint(CheckpointModel checkpoint, TextWriter writer)
+        private async Task NextCheckpoint(Checkpoint checkpoint, TextWriter writer)
         {
             Guard.Argument(checkpoint, nameof(checkpoint)).NotNull();
             Guard.Argument(writer, nameof(writer)).NotNull();
@@ -104,10 +102,23 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             await writer.WriteAsync(json);
         }
 
-        private async Task<List<Match>> GetMatches(ulong latest, ILogger log)
+        private List<Match> GetValidAbilityDraftMatches(List<Match> matches)
+        {
+            // Guards:
+            // Only Ad Matches
+            // Only Matches that are longer then 10 minutes
+
+            var collection = matches
+                    .Where(_ => _.game_mode == 18)
+                    .Where(_ => _.duration < 600)
+                    .ToList();
+
+            return collection;
+        }
+
+        private async Task<List<Match>> GetMatches(ulong latest)
         {
             Guard.Argument(latest, nameof(latest)).NotDefault();
-            Guard.Argument(log, nameof(log)).NotNull();
 
             var matches = await this.apiClient.GetMatchesInSequence(latest);
             if (matches.Count < 100)
