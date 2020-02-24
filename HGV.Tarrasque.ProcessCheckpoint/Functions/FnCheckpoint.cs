@@ -3,7 +3,6 @@ using HGV.Tarrasque.ProcessCheckpoint.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Queue;
@@ -28,12 +27,12 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Functions
             [BlobTrigger("hgv-checkpoint/master.json")]TextReader reader,
             [Blob("hgv-checkpoint/master.json")]TextWriter writer,
             [Queue("hgv-ad-matches")]CloudQueue queue,
-            [DurableClient]IDurableClient client,
             ILogger log)
         {
             using (new Timer("FnCheckpoint", log))
             {
-                await collectionService.ProcessCheckpoint(reader, writer, queue, client, log);
+                await queue.FetchAttributesAsync();
+                await collectionService.ProcessCheckpoint(reader, writer, queue, log);
             }
         }
 
