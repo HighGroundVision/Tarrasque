@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.ProcessRegions.Models
+namespace HGV.Tarrasque.ProcessRegions.DTO
 {
     public class Region
     {

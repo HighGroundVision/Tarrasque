@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.ProcessaAbilities.Models
+namespace HGV.Tarrasque.ProcessHeroes.DTO
 {
-    public class AbilityDetailCombo
-    {
+    public class HeroDetailCombo
+    { 
         public int Id { get; set; }
         public string Name { get; set; }
         public string Image { get; set; }
@@ -14,7 +14,7 @@ namespace HGV.Tarrasque.ProcessaAbilities.Models
         public float WinRate { get { return this.Wins / (float)this.Picks; } }
     }
 
-    public class AbilityDetailHistory
+    public class HeroDetailHistory
     {
         public string Day { get; set; }
         public int Picks { get; set; }
@@ -22,19 +22,19 @@ namespace HGV.Tarrasque.ProcessaAbilities.Models
         public float WinRate { get { return this.Wins / (float)this.Picks; } }
     }
 
-    public class AbilityDetails
+    public class HeroDetail
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public string Image { get; set; }
-        public int OrginalHeroId { get; set; }
-
         public int Picks { get; set; }
         public int Wins { get; set; }
         public float WinRate { get { return this.Wins / (float)this.Picks; } }
-
-        public List<AbilityDetailHistory> History { get; set; } = new List<AbilityDetailHistory>();
-        public List<AbilityDetailCombo> Abilities { get; set; } = new List<AbilityDetailCombo>();
-        public List<AbilityDetailCombo> Heroes { get; set; } = new List<AbilityDetailCombo>();
+        public List<HeroDetailHistory> History { get; set; } = new List<HeroDetailHistory>();
+        public List<HeroDetailAttribute> Attributes { get; set; } = new List<HeroDetailAttribute>();
+        public List<HeroDetailCombo> Talents { get; set; } = new List<HeroDetailCombo>();
+        public List<HeroDetailCombo> Abilities { get; set; } = new List<HeroDetailCombo>();
+        public List<HeroDetailCombo> Combos { get; set; } = new List<HeroDetailCombo>();
+        
     }
 }

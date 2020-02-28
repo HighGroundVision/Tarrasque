@@ -1,13 +1,13 @@
 ﻿using HGV.Basilius;
 using HGV.Daedalus;
 using HGV.Tarrasque.Common;
-using HGV.Tarrasque.ProcessaAbilities.Services;
+using HGV.Tarrasque.ProcessAbilities.Services;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
-[assembly: FunctionsStartup(typeof(HGV.Tarrasque.ProcessaAbilities.Startup))]
+[assembly: FunctionsStartup(typeof(HGV.Tarrasque.ProcessAbilities.Startup))]
 
-namespace HGV.Tarrasque.ProcessaAbilities
+namespace HGV.Tarrasque.ProcessAbilities
 {
     public class Startup : FunctionsStartup
     {

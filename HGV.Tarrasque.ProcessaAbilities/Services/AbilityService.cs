@@ -1,7 +1,7 @@
 ﻿using HGV.Basilius;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Extensions;
-using HGV.Tarrasque.ProcessaAbilities.Models;
+using HGV.Tarrasque.ProcessAbilities.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -12,18 +12,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HGV.Tarrasque.ProcessaAbilities.Services
+namespace HGV.Tarrasque.ProcessAbilities.Services
 {
     public interface IAbilityService
     {
         Task Process(Match item, IBinder binder, ILogger log);
-        Task<List<AbilitySummaryStat>> GetSummary(IBinder binder, ILogger log);
-        Task<AbilityDetails> GetDetails(int id, IBinder binder, ILogger log);
+        Task<List<DTO.AbilitySummary>> GetSummary(IBinder binder, ILogger log);
+        Task<DTO.AbilityDetails> GetDetails(int id, IBinder binder, ILogger log);
+        Task UpdateSummary(IBinder binder, ILogger log);
     }
 
     public class AbilityService : IAbilityService
     {
-        private const string SUMMARY_PATH = "hgv-abilities/{0}/summary.json";
+        private const string SUMMARY_PATH = "hgv-abilities/summary.json";
+        private const string HISTORY_PATH = "hgv-abilities/{0}/history.json";
         private const string DETAILS_PATH = "hgv-abilities/{0}/details.json";
         private const string HISTORY_DELIMITER = "yy-MM-dd";
 
@@ -76,16 +78,16 @@ namespace HGV.Tarrasque.ProcessaAbilities.Services
 
                 foreach (var ability in abilities)
                 {
-                    await UpdateSummary(match, player, ability, binder, log);
+                    await UpdateHistory(match, player, ability, binder, log);
                     await UpdateDetails(match, player, ability, abilities, binder, log);
                 }
             }
         }
 
-        private static async Task UpdateSummary(Match match, Player player, Ability ability, IBinder binder, ILogger log)
+        private static async Task UpdateHistory(Match match, Player player, Ability ability, IBinder binder, ILogger log)
         {
-            var attr = new BlobAttribute(string.Format(SUMMARY_PATH, ability.Id));
-            var summary = await ReadData<AbilitySummary>(binder, attr);
+            var attr = new BlobAttribute(string.Format(HISTORY_PATH, ability.Id));
+            var history = await ReadData<AbilityHistory>(binder, attr);
 
             var victory = match.Victory(player);
             var ancestry = (ability.HeroId == player.hero_id);
@@ -94,27 +96,27 @@ namespace HGV.Tarrasque.ProcessaAbilities.Services
             var bounds = date.AddDays(-6);
             var mid = date.AddDays(-3);
 
-            summary.Total.Picks++;
-            summary.Total.Wins += victory ? 1 : 0;
-            summary.Total.Ancestry += ancestry ? 1 : 0;
-            summary.Total.Priority += priority;
+            history.Total.Picks++;
+            history.Total.Wins += victory ? 1 : 0;
+            history.Total.Ancestry += ancestry ? 1 : 0;
+            history.Total.Priority += priority;
 
-            summary.Data.Add(new AbilitySummaryVictory() { Timestamp = date, Victory = victory, Ancestry = ancestry, Priority = priority });
-            summary.Data.RemoveAll(_ => _.Timestamp < bounds);
+            history.Data.Add(new AbilityHistoryVictory() { Timestamp = date, Victory = victory, Ancestry = ancestry, Priority = priority });
+            history.Data.RemoveAll(_ => _.Timestamp < bounds);
 
-            var current = summary.Data.Where(_ => _.Timestamp > mid).ToList();
-            summary.Current.Picks = current.Count();
-            summary.Current.Wins = current.Count(_ => _.Victory == true);
-            summary.Current.Ancestry = current.Count(_ => _.Ancestry == true);
-            summary.Current.Priority = current.Sum(_ => _.Priority);
+            var current = history.Data.Where(_ => _.Timestamp > mid).ToList();
+            history.Current.Picks = current.Count();
+            history.Current.Wins = current.Count(_ => _.Victory == true);
+            history.Current.Ancestry = current.Count(_ => _.Ancestry == true);
+            history.Current.Priority = current.Sum(_ => _.Priority);
 
-            var previous = summary.Data.Where(_ => _.Timestamp < mid).ToList();
-            summary.Previous.Picks = previous.Count;
-            summary.Previous.Wins = previous.Count(_ => _.Victory == true);
-            summary.Previous.Ancestry = previous.Count(_ => _.Ancestry == true);
-            summary.Previous.Priority = previous.Sum(_ => _.Priority);
+            var previous = history.Data.Where(_ => _.Timestamp < mid).ToList();
+            history.Previous.Picks = previous.Count;
+            history.Previous.Wins = previous.Count(_ => _.Victory == true);
+            history.Previous.Ancestry = previous.Count(_ => _.Ancestry == true);
+            history.Previous.Priority = previous.Sum(_ => _.Priority);
 
-            await WriteData(binder, attr, summary);
+            await WriteData(binder, attr, history);
         }
 
         private static async Task UpdateDetails(Match match, Player player, Ability ability, List<Ability> abilities, IBinder binder, ILogger log)
@@ -155,22 +157,66 @@ namespace HGV.Tarrasque.ProcessaAbilities.Services
             await WriteData(binder, attr, details);
         }
 
-        public async Task<List<AbilitySummaryStat>> GetSummary(IBinder binder, ILogger log)
+        public async Task UpdateSummary(IBinder binder, ILogger log)
         {
-            var collection = new List<AbilitySummaryStat>();
+            var attr = new BlobAttribute(SUMMARY_PATH);
+            var summary = await ReadData<AbilitySummary>(binder, attr);
 
-            var heroes = this.metaClient.GetHeroes();
-            foreach (var hero in heroes)
+            var abilities = this.metaClient.GetSkills().Where(_ => _.AbilityDraftEnabled).ToList();
+            foreach (var ability in abilities)
             {
-                var attr = new BlobAttribute(string.Format(SUMMARY_PATH, hero.Id));
-                var summary = await ReadData<AbilitySummaryStat>(binder, attr);
-                collection.Add(summary);
+                var history = await ReadData<AbilityHistory>(binder, new BlobAttribute(string.Format(HISTORY_PATH, ability.Id)));
+                summary.Data[ability.Id] = history;
+            }
+
+            await WriteData(binder, attr, summary);
+        }
+
+        public async Task<List<DTO.AbilitySummary>> GetSummary(IBinder binder, ILogger log)
+        {
+            var attr = new BlobAttribute(string.Format(SUMMARY_PATH));
+            var summary = await ReadData<AbilitySummary>(binder, attr);
+
+            var collection = new List<DTO.AbilitySummary>();
+            var abilities = this.metaClient.GetSkills().Where(_ => _.AbilityDraftEnabled);
+            foreach (var ability in abilities)
+            {
+                var data = summary.Data[ability.Id];
+
+                var item = new DTO.AbilitySummary()
+                {
+                    Id = ability.Id,
+                    Name = ability.Name,
+                    Image = ability.Image,
+                    Total = new DTO.AbilitySummaryHistory()
+                    {
+                        Ancestry = data.Total.Ancestry,
+                        Picks = data.Total.Picks,
+                        Priority = data.Total.Priority,
+                        Wins = data.Total.Wins,
+                    },
+                    Current = new DTO.AbilitySummaryHistory()
+                    {
+                        Ancestry = data.Current.Ancestry,
+                        Picks = data.Current.Picks,
+                        Priority = data.Current.Priority,
+                        Wins = data.Current.Wins,
+                    },
+                    Previous = new DTO.AbilitySummaryHistory()
+                    {
+                        Ancestry = data.Current.Ancestry,
+                        Picks = data.Current.Picks,
+                        Priority = data.Current.Priority,
+                        Wins = data.Current.Wins,
+                    },
+                };
+                collection.Add(item);
             }
 
             return collection;
         }
 
-        public async Task<AbilityDetails> GetDetails(int id, IBinder binder, ILogger log)
+        public async Task<DTO.AbilityDetails> GetDetails(int id, IBinder binder, ILogger log)
         {
             var heroes = metaClient.GetHeroes();
             var skills = metaClient.GetSkills();
@@ -178,10 +224,10 @@ namespace HGV.Tarrasque.ProcessaAbilities.Services
             if (ability == null)
                 throw new ArgumentOutOfRangeException(nameof(id));
 
-            var summary = await ReadData<AbilitySummary>(binder, new BlobAttribute(string.Format(SUMMARY_PATH, id)));
+            var summary = await ReadData<AbilityHistory>(binder, new BlobAttribute(string.Format(HISTORY_PATH, id)));
             var combos = await ReadData<AbilityCombo>(binder, new BlobAttribute(string.Format(DETAILS_PATH, id)));
 
-            var details = new AbilityDetails();
+            var details = new DTO.AbilityDetails();
             details.Id = ability.Id;
             details.Name = ability.Name;
             details.Image = ability.Image;
@@ -191,7 +237,7 @@ namespace HGV.Tarrasque.ProcessaAbilities.Services
             details.Wins = summary.Total.Wins;
             details.History = summary.Data
                 .GroupBy(_ => _.Timestamp.ToString(HISTORY_DELIMITER))
-                .Select(_ => new AbilityDetailHistory()
+                .Select(_ => new DTO.AbilityDetailHistory()
                 {
                     Day = _.Key,
                     Picks = _.Count(),
@@ -200,7 +246,7 @@ namespace HGV.Tarrasque.ProcessaAbilities.Services
                 .ToList();
 
             details.Heroes = combos.Heroes
-               .Join(skills, _ => _.Id, _ => _.Id, (lhs, rhs) => new AbilityDetailCombo()
+               .Join(skills, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.AbilityDetailCombo()
                {
                    Id = rhs.Id,
                    Name = rhs.Name,
@@ -212,7 +258,7 @@ namespace HGV.Tarrasque.ProcessaAbilities.Services
                .ToList();
 
             details.Abilities = combos.Abilities
-               .Join(skills, _ => _.Id, _ => _.Id, (lhs, rhs) => new AbilityDetailCombo()
+               .Join(skills, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.AbilityDetailCombo()
                {
                    Id = rhs.Id,
                    Name = rhs.Name,

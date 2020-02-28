@@ -1,6 +1,6 @@
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Helpers;
-using HGV.Tarrasque.ProcessaAbilities.Services;
+using HGV.Tarrasque.ProcessAbilities.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -8,7 +8,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace HGV.Tarrasque.ProcessaAbilities
+namespace HGV.Tarrasque.ProcessAbilities
 {
     public class FnAbility
     {
@@ -29,6 +29,19 @@ namespace HGV.Tarrasque.ProcessaAbilities
             using (new Timer("FnAbilityProcess", log))
             {
                 await this.abilityService.Process(item, binder, log);
+            }
+        }
+
+        [FunctionName("FnAbilityTimer")]
+        public async Task Run(
+            [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
+            IBinder binder,
+            ILogger log
+        )
+        {
+            using (new Timer("FnAbilityTimer", log))
+            {
+                await this.abilityService.UpdateSummary(binder, log);
             }
         }
 

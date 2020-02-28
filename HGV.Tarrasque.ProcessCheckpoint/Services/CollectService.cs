@@ -50,18 +50,20 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
                 // Update Checkpoint
                 checkpoint.Total += matches.Count;
                 checkpoint.ADTotal += collection.Count;
-                checkpoint.Timestamp = collection.Max(_ => DateTimeOffset.FromUnixTimeSeconds(_.start_time + _.duration));
+                checkpoint.Timestamp = matches.Max(_ => DateTimeOffset.FromUnixTimeSeconds(_.start_time + _.duration));
                 checkpoint.Latest = matches.Max(_ => _.match_seq_num) + 1;
 
                 // Queue
                 foreach (var item in collection)
                     foreach (var q in queues)
                         await q.AddAsync(item);
+
+                await Task.Delay(TimeSpan.FromSeconds(1));
             }
             catch (BelowLimitException)
             {
                 log.LogError("Below Limit");
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                await Task.Delay(TimeSpan.FromMinutes(5));
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("429"))
             {
@@ -110,7 +112,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
 
             var collection = matches
                     .Where(_ => _.game_mode == 18)
-                    .Where(_ => _.duration < 600)
+                    .Where(_ => _.duration > 600)
                     .ToList();
 
             return collection;

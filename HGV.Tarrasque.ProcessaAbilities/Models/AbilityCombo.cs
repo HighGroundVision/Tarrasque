@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.ProcessaAbilities.Models
+namespace HGV.Tarrasque.ProcessAbilities.Models
 {
     public class AbilityComboStat
     {

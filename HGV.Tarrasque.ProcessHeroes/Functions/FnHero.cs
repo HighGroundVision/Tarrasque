@@ -34,6 +34,18 @@ namespace HGV.Tarrasque.ProcessHeroes
             }
         }
 
+        [FunctionName("FnHeroTimer")]
+        public async Task Run(
+            [TimerTrigger("0 0 * * * *")]TimerInfo myTimer,
+            IBinder binder,
+            ILogger log
+        )
+        {
+            using (new Timer("FnHeroTimer", log))
+            {
+                await this.heroService.UpdateSummary(binder, log);
+            }
+        }
 
         [FunctionName("FnHeroSummary")]
         public async Task<IActionResult> HeroSummary(

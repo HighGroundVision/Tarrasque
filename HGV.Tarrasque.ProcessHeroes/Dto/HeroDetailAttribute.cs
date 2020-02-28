@@ -6,7 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace HGV.Tarrasque.ProcessHeroes.Models
+namespace HGV.Tarrasque.ProcessHeroes.DTO
 {
     public class HeroDetailAttribute
     {
