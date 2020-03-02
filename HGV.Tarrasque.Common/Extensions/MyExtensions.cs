@@ -30,6 +30,20 @@ namespace HGV.Tarrasque.Common.Extensions
             }
         }
 
+        public static IList<Ability> GetAbilities(this HGV.Daedalus.GetMatchDetails.Player player)
+        {
+            var abilities = MetaClient.Instance.Value.GetAbilities();
+            if (player.ability_upgrades == null)
+                return new List<Ability>();
+            else
+                return player.ability_upgrades.Select(_ => _.ability).Distinct().Join(abilities, _ => _, _ => _.Id, (lhs, rhs) => rhs).ToList();
+        }
+
+        public static int GetTeam(this HGV.Daedalus.GetMatchDetails.Player player)
+        {
+            return player.player_slot < 5 ? 0 : 1;
+        }
+
         /*
         DOTA_LEAVER_NONE = 0;
 	    DOTA_LEAVER_DISCONNECTED = 1;
