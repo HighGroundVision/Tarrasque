@@ -23,13 +23,15 @@ using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.ProcessPlayers.Services
 {
+    using Profile = Daedalus.GetPlayerSummaries.Player;
+
     public interface IPlayerService
     {
         Task Process(Match item, IBinder binder, ILogger log);
         Task UpdateLeaderboards(IBinder binder, ILogger log);
         Task<List<DTO.Summary>> GetSummaries(int id, IBinder binder, ILogger log);
         Task<DTO.Details> GetDetails(int id, IBinder binder, ILogger log);
-        Task<DTO.Leaderboard> GetLeaderboard(int id, IBinder binder, ILogger log);
+        Task<List<DTO.Leaderboard>> GetLeaderboard(int id, IBinder binder, ILogger log);
     }
 
     public class PlayerService : IPlayerService
@@ -38,6 +40,8 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
         private const string LEADERBOARD_PATH = "hgv-leaderboards/{0}.json";
         private const string PLAYER_ENTITY_TABLE = "HGVPlayers";
         private const ulong CATCH_ALL_ACCOUNT = 4294967295;
+        public const int GLOBAL_LEADERBOARD_REGION = 0;
+        private const int LEADERBOARD_RANK_CUTOFF = 1000;
 
         private readonly MetaClient metaClient;
         private readonly IDotaApiClient dotaClient;
@@ -104,17 +108,8 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
             }
         }
 
-
-        public async Task Process(Match match, IBinder binder, ILogger log)
-        {
-            await UpdatePlayerSummary(match, binder, log);
-            await UpdateDetails(match, binder, log);
-        }
-
         private async Task UpdatePlayerSummary(Match match, IBinder binder, ILogger log)
         {
-            var calibrated = new List<int>();
-
             var table = await binder.BindAsync<CloudTable>(new TableAttribute(PLAYER_ENTITY_TABLE));
 
             var partitionKey = this.metaClient.GetRegionId(match.cluster).ToString();
@@ -163,9 +158,6 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
             {
                 item.Data.Total++;
                 item.Data.Calibrated = item.Data.Total > 10;
-
-                if (item.Data.Calibrated)
-                    calibrated.Add(item.Player.player_slot);
 
                 var victory = match.Victory(item.Player);
                 if (victory)
@@ -247,12 +239,114 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
             }
         }
 
+        private async Task UpdateLeaderboard(IBinder binder, ILogger log, int regionId, List<PlayerEntity> collectionRegional)
+        {
+            var attr = new BlobAttribute(string.Format(LEADERBOARD_PATH, regionId));
+            var blob = await binder.BindAsync<CloudBlockBlob>(attr);
+
+            Action<LeaderboardDetails> updateFn = (model) =>
+            {
+                model = new LeaderboardDetails()
+                {
+                    Region = regionId,
+                    List = collectionRegional.Select(_ => new LeaderboardEntity()
+                    {
+                        AccountId = uint.Parse(_.RowKey),
+                        Ranking = _.Ranking,
+                        Total = _.Total,
+                        Wins = _.Wins,
+                        WinRate = _.WinRate,
+                    }).ToList()
+                };
+            };
+            await ProcessBlob(blob, updateFn, log);
+        }
+
+        private async Task<List<Profile>> GetProfiles(params ulong[] identities)
+        {
+            try
+            {
+                return await dotaClient.GetPlayersSummary(identities.ToList());
+            }
+            catch (Exception)
+            {
+                return new List<Daedalus.GetPlayerSummaries.Player>();
+            }
+        }
+
+        private async Task<List<Friend>> GetFriends(int id)
+        {
+            try
+            {
+                var steamId = (ulong)id + 76561197960265728L;
+                var friends = await dotaClient.GetFriendsList(steamId);
+                return friends;
+            }
+            catch (Exception)
+            {
+                return new List<Friend>();
+            }
+        }
+
+
+        public async Task Process(Match match, IBinder binder, ILogger log)
+        {
+            await UpdatePlayerSummary(match, binder, log);
+            await UpdateDetails(match, binder, log);
+        }
 
         public async Task UpdateLeaderboards(IBinder binder, ILogger log)
         {
-            await Task.Delay(TimeSpan.FromSeconds(1));
-        }
+            var table = await binder.BindAsync<CloudTable>(new TableAttribute(PLAYER_ENTITY_TABLE));
 
+            var collectionGlobal = new List<PlayerEntity>();
+
+            var regions = metaClient.GetRegions();
+            foreach (var region in regions)
+            {
+                // Unknown Region
+                if (region.Key == 0) 
+                    continue;
+
+                var filters = new List<string>()
+                {
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, $"{region.Key}"),
+                    TableQuery.GenerateFilterConditionForDouble("Ranking", QueryComparisons.GreaterThan, LEADERBOARD_RANK_CUTOFF),
+                    TableQuery.GenerateFilterConditionForBool("Calibrated", QueryComparisons.Equal, true)
+                };
+
+                var filter = string.Empty;
+                foreach (var f in filters)
+                    filter = string.IsNullOrEmpty(filter) ? f : TableQuery.CombineFilters(filter, TableOperators.And, f);
+
+                var query = new TableQuery<PlayerEntity>().Where(filter).Take(1000);
+
+                var collectionRegional = new List<PlayerEntity>();
+                TableContinuationToken token = null;
+                do
+                {
+                    var segment = await table.ExecuteQuerySegmentedAsync(query, token);
+                    token = segment.ContinuationToken;
+
+                    collectionRegional = collectionRegional
+                        .Concat(segment.Results)
+                        .OrderByDescending(_ => _.Ranking)
+                        .Take(100)
+                        .ToList();
+
+                    collectionGlobal = collectionGlobal
+                        .Concat(segment.Results)
+                        .OrderByDescending(_ => _.Ranking)
+                        .Take(100)
+                        .ToList();
+                }
+                while (token != null);
+
+                await UpdateLeaderboard(binder, log, region.Key, collectionRegional);
+            }
+
+            await UpdateLeaderboard(binder, log, GLOBAL_LEADERBOARD_REGION, collectionGlobal);
+        }
 
         public async Task<List<Summary>> GetSummaries(int id, IBinder binder, ILogger log)
         {
@@ -294,13 +388,20 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
                 var heroes = metaClient.GetHeroes();
                 var skills = metaClient.GetSkills();
 
-                // Get Player Summmarys
-                var players = await GetPlayers(data);
+                // Get Player Summary
+                var identities = data.Combatants.Select(_ => _.SteamId).Take(100).ToArray();
+                var profiles = await GetProfiles(identities);
 
                 // Get Friends List
                 var friends = await GetFriends(id);
 
                 var details = new Details();
+                details.AccountId = id;
+
+                var profile = await GetProfiles(details.SteamId);
+                details.Persona = profile.Select(_ => _.personaname).FirstOrDefault();
+                details.Avatar = profile.Select(_ => _.avatar).FirstOrDefault();
+
                 details.History = data.History
                     .Join(heroes, _ => _.Hero, _ => _.Id, (lhs, rhs) => new DTO.History()
                     {
@@ -323,11 +424,12 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
                     }).ToList();
 
                 details.Combatants = data.Combatants
-                    .Join(players, _ => _.SteamId, _ => _.steamid, (player, profile) => new DTO.PlayerSummary()
+                    .Join(profiles, _ => _.SteamId, _ => _.steamid, (player, profile) => new DTO.PlayerSummary()
                     {
                         AccountId = player.AccountId,
                         SteamId = player.SteamId,
                         Persona = profile.personaname,
+                        Avatar = profile.avatar,
                         Friend = friends.Any(x => x.SteamId == player.SteamId),
                         With = player.With.Join(heroes, _ => _.Hero, _ => _.Id, (history, hero) => new DTO.History()
                         {
@@ -380,41 +482,27 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
             }
         }
 
-        private async Task<List<Daedalus.GetPlayerSummaries.Player>> GetPlayers(PlayerDetail data)
-        {
-            try
-            {
-                var identities = data.Combatants.Select(_ => _.SteamId).Take(100).ToList();
-                var players = await dotaClient.GetPlayersSummary(identities);
-                return players;
-            }
-            catch (Exception)
-            {
-                return new List<Daedalus.GetPlayerSummaries.Player>();
-            }
-        }
-
-        private async Task<List<Friend>> GetFriends(int id)
-        {
-            try
-            {
-                var steamId = (ulong)id + 76561197960265728L;
-                var friends = await dotaClient.GetFriendsList(steamId);
-                return friends;
-            }
-            catch (Exception)
-            {
-                return new List<Friend>();
-            }
-        }
-
-        public async Task<Leaderboard> GetLeaderboard(int id, IBinder binder, ILogger log)
+        public async Task<List<Leaderboard>> GetLeaderboard(int id, IBinder binder, ILogger log)
         {
             var attr = new BlobAttribute(string.Format(LEADERBOARD_PATH, id));
             var data = await ReadData<LeaderboardDetails>(binder, attr);
 
-            var leaderboard = new Leaderboard();
-            return leaderboard;
+            var identities = data.List.Select(_ => _.SteamId).ToArray();
+            var profiles = await GetProfiles(identities);
+
+            var collection = data.List.Join(profiles, _ => _.SteamId, _ => _.steamid, (data, profile) => new Leaderboard()
+            {
+                AccountId = data.AccountId,
+                SteamId = data.SteamId,
+                Persona = profile.personaname,
+                Avatar = profile.avatar,
+                Total = data.Total,
+                Wins = data.Wins,
+                WinRate = data.WinRate,
+                Ranking = data.Ranking,
+            }).ToList();
+
+            return collection;
         }
     }
 }

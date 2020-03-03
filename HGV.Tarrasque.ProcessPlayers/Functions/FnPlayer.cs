@@ -54,7 +54,8 @@ namespace HGV.Tarrasque.ProcessPlayers
         {
             using (new Timer("FnGlobalLeaderboard", log))
             {
-                var leaderboard = await this.playerService.GetLeaderboard(0, binder, log);
+                var id = PlayerService.GLOBAL_LEADERBOARD_REGION;
+                var leaderboard = await this.playerService.GetLeaderboard(id, binder, log);
                 return new OkObjectResult(leaderboard);
             }
         }
