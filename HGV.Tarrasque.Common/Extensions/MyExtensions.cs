@@ -30,9 +30,9 @@ namespace HGV.Tarrasque.Common.Extensions
             }
         }
 
-        public static IList<Ability> GetAbilities(this HGV.Daedalus.GetMatchDetails.Player player)
+        public static IList<Ability> GetAbilities(this HGV.Daedalus.GetMatchDetails.Player player, MetaClient client)
         {
-            var abilities = MetaClient.Instance.Value.GetAbilities();
+            var abilities = client.GetSkills();
             if (player.ability_upgrades == null)
                 return new List<Ability>();
             else

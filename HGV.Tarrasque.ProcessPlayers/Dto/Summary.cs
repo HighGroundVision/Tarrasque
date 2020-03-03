@@ -11,6 +11,7 @@ namespace HGV.Tarrasque.ProcessPlayers.DTO
         public int Total { get; set; }
         public int Wins { get; set; }
         public double WinRate { get; set; }
+        public double Ranking { get; set; }
         public bool Calibrated { get; set; }
     }
 }

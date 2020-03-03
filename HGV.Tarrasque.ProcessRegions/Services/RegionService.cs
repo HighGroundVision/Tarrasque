@@ -1,5 +1,6 @@
 ﻿using HGV.Basilius;
 using HGV.Daedalus.GetMatchDetails;
+using HGV.Tarrasque.Common.Exceptions;
 using HGV.Tarrasque.ProcessRegions.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -39,11 +40,11 @@ namespace HGV.Tarrasque.ProcessRegions.Services
         {
             var reader = await binder.BindAsync<TextReader>(attr);
             if (reader == null)
-                throw new NullReferenceException(nameof(reader));
+                throw new NotFoundException();
 
             var input = await reader.ReadToEndAsync();
             if (string.IsNullOrWhiteSpace(input))
-                throw new NullReferenceException(nameof(reader));
+                throw new NotFoundException();
 
             return JsonConvert.DeserializeObject<T>(input);
         }

@@ -6,12 +6,7 @@ namespace HGV.Tarrasque.ProcessPlayers.Models
 {
     public class PlayerDetail
     {
-        public ulong AccountId { get; set; }
-        public ulong SteamId { get { return AccountId + 76561197960265728L; } }
-        public int Total { get; set; }
-        public float WinRate { get; set; }
         public List<History> History { get; set; } = new List<History>();
-
         public List<PlayerSummary> Combatants { get; set; } = new List<PlayerSummary>();
     }
 

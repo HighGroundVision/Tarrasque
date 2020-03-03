@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
 namespace HGV.Tarrasque.ProcessPlayers
@@ -28,15 +29,7 @@ namespace HGV.Tarrasque.ProcessPlayers
         {
             using (new Timer("FnPlayerProcess", log))
             {
-                try
-                {
-                    await this.playerService.Process(item, binder, log);
-                }
-                catch (System.Exception ex)
-                {
-                    throw;
-                }
-                
+                await this.playerService.Process(item, binder, log);
             }
         }
 
@@ -61,7 +54,7 @@ namespace HGV.Tarrasque.ProcessPlayers
         {
             using (new Timer("FnGlobalLeaderboard", log))
             {
-                var leaderboard = await this.playerService.GetGlobalLeaderboard(binder, log);
+                var leaderboard = await this.playerService.GetLeaderboard(0, binder, log);
                 return new OkObjectResult(leaderboard);
             }
         }
@@ -75,7 +68,7 @@ namespace HGV.Tarrasque.ProcessPlayers
         {
             using (new Timer("FnRegionalLeaderboard", log))
             {
-                var leaderboard = await this.playerService.GetRegionalLeaderboard(id, binder, log);
+                var leaderboard = await this.playerService.GetLeaderboard(id, binder, log);
                 return new OkObjectResult(leaderboard);
             }
         }
@@ -87,10 +80,13 @@ namespace HGV.Tarrasque.ProcessPlayers
             IBinder binder,
             ILogger log)
         {
-            using (new Timer("FnPlayerDetails", log))
+            using (new Timer("FnPlayerSummary", log))
             {
                 var colleciton = await this.playerService.GetSummaries(id, binder, log);
-                return new OkObjectResult(colleciton);
+                if (colleciton == null)
+                    return new NotFoundResult();
+                else
+                    return new OkObjectResult(colleciton);
             }
         }
 
@@ -104,7 +100,10 @@ namespace HGV.Tarrasque.ProcessPlayers
             using (new Timer("FnPlayerDetails", log))
             {
                 var details = await this.playerService.GetDetails(id, binder, log);
-                return new OkObjectResult(details);
+                if (details == null)
+                    return new NotFoundResult();
+                else
+                    return new OkObjectResult(details);
             }
         }
     }
