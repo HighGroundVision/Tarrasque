@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HGV.Tarrasque.Api": {
+      "commandName": "Project",
+      "commandLineArgs": "start --port 7070"
+    }
+  }
+}

@@ -228,6 +228,9 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
             var abilities = this.metaClient.GetSkills().Where(_ => _.AbilityDraftEnabled);
             foreach (var ability in abilities)
             {
+                if (summary.Data.ContainsKey(ability.Id) == false)
+                    continue;
+
                 var data = summary.Data[ability.Id];
 
                 var item = new DTO.AbilitySummary()
@@ -293,11 +296,11 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
                 .ToList();
 
             details.Heroes = combos.Heroes
-               .Join(skills, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.AbilityDetailCombo()
+               .Join(heroes, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.AbilityDetailCombo()
                {
                    Id = rhs.Id,
                    Name = rhs.Name,
-                   Image = rhs.Image,
+                   Image = rhs.ImageBanner,
                    Picks = lhs.Picks,
                    Wins = lhs.Wins,
                })

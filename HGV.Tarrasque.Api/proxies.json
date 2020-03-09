@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json.schemastore.org/proxies",
+  "proxies": {
+    "WebSite": {
+      "matchCondition": {
+        "route": "/",
+        "methods": [ "GET", "HEAD", "OPTIONS" ]
+      },
+      "backendUri": "https://flicker.z9.web.core.windows.net/index.html"
+    },
+    "WebContent": {
+      "matchCondition": {
+        "route": "/{*path}",
+        "methods": [ "GET", "HEAD", "OPTIONS" ]
+      },
+      "backendUri": "https://flicker.z9.web.core.windows.net/{path}"
+    },
+    "Pool": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/pool"
+      },
+      "backendUri": "https://localhost/api/pool"
+    },
+    "CheckpointStart": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/checkpoint/start"
+      },
+      "backendUri": "https://%CHECKPOINT_HOST%/api/checkpoint/start"
+    },
+    "CheckpointStatus": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/checkpoint/status"
+      },
+      "backendUri": "https://%CHECKPOINT_HOST%/api/checkpoint/status"
+    },
+    "RegionSummary": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/regions"
+      },
+      "backendUri": "https://%REGIONS_HOST%/api/regions"
+    },
+    "RegionHistory": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/region/{region}/history"
+      },
+      "backendUri": "https://%REGIONS_HOST%/api/region/{region}/history"
+    },
+    "HeroesSummary": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/heroes"
+      },
+      "backendUri": "https://%HEROES_HOST%/api/heroes"
+    },
+    "HeroDetails": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/hero/{id}"
+      },
+      "backendUri": "https://%HEROES_HOST%/api/hero/{id}"
+    },
+    "AbilitiesSummary": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/abilities"
+      },
+      "backendUri": "https://%ABILITIES_HOST%/api/abilities"
+    },
+    "AbilityDetails": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/ability/{id}"
+      },
+      "backendUri": "https://%ABILITIES_HOST%/api/ability/{id}"
+    },
+    "LeaderboardGlobal": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/leaderboard/global"
+      },
+      "backendUri": "https://%PLAYERS_HOST%/api/leaderboard/global"
+    },
+    "LeaderboardRegional": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/leaderboard/region/{id}"
+      },
+      "backendUri": "https://%PLAYERS_HOST%/api/leaderboard/region/{id}"
+    },
+    "PlayerSummary": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/player/summary/{id}"
+      },
+      "backendUri": "https://%PLAYERS_HOST%/api/player/summary/{id}"
+    },
+    "PlayerDetails": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/player/details/{id}"
+      },
+      "backendUri": "https://%PLAYERS_HOST%/api/player/details/{id}"
+    }
+  }
+}
