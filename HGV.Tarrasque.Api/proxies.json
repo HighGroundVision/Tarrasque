@@ -15,13 +15,6 @@
       },
       "backendUri": "https://flicker.z9.web.core.windows.net/{path}"
     },
-    "Pool": {
-      "matchCondition": {
-        "methods": [ "GET" ],
-        "route": "/api/pool"
-      },
-      "backendUri": "https://localhost/api/pool"
-    },
     "CheckpointStart": {
       "matchCondition": {
         "methods": [ "GET" ],
@@ -49,6 +42,13 @@
         "route": "/api/region/{region}/history"
       },
       "backendUri": "https://%REGIONS_HOST%/api/region/{region}/history"
+    },
+    "Pool": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/api/draft/pool"
+      },
+      "backendUri": "https://%HEROES_HOST%/api/draft/pool"
     },
     "HeroesSummary": {
       "matchCondition": {

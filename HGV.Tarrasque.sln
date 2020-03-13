@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessAbilit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.ProcessPlayers", "HGV.Tarrasque.ProcessPlayers\HGV.Tarrasque.ProcessPlayers.csproj", "{09527CE6-9E98-4D50-BD48-7135EACF4BED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HGV.Tarrasque.Api", "HGV.Tarrasque.Api\HGV.Tarrasque.Api.csproj", "{AAD93AD5-EAC0-4807-8745-39E56E3DE5E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HGV.Tarrasque.Api", "HGV.Tarrasque.Api\HGV.Tarrasque.Api.csproj", "{AAD93AD5-EAC0-4807-8745-39E56E3DE5E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

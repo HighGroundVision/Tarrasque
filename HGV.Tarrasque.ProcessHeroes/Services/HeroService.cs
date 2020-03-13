@@ -23,6 +23,7 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
         Task<List<DTO.HeroSummary>> GetSummary(IBinder binder, ILogger log);
         Task<DTO.HeroDetail> GetDetails(int id, IBinder binder, ILogger log);
         Task UpdateSummary(IBinder binder, ILogger log);
+        List<DTO.DraftPoolHero> GetPool();
     }
 
     public class HeroService : IHeroService
@@ -109,27 +110,72 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
             var attr = new BlobAttribute(string.Format(HISTORY_PATH, player.hero_id));
             var blob = await binder.BindAsync<CloudBlockBlob>(attr);
 
-            Action<HeroHistory> updateFn = (history) =>
+            try
             {
-                var victory = match.Victory(player);
-                var date = DateTimeOffset.FromUnixTimeSeconds(match.start_time);
-                var bounds = date.AddDays(-6);
-                var mid = date.AddDays(-3);
+                var exist = await blob.ExistsAsync();
+                if (!exist)
+                {
+                    var data = new HeroHistory();
+                    var json = JsonConvert.SerializeObject(data);
+                    await blob.UploadTextAsync(json);
+                }
+            }
+            catch (Exception)
+            {
+            }
 
-                history.Total.Picks++;
-                history.Total.Wins += victory ? 1 : 0;
+            var policy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryForeverAsync((n) => TimeSpan.FromMilliseconds(100));
 
-                history.Data.Add(new HeroHistoryVictory() { Timestamp = date, Victory = victory });
-                history.Data.RemoveAll(_ => _.Timestamp < bounds);
+            var ac = await policy.ExecuteAsync(async () =>
+            {
+                var leaseId = await blob.AcquireLeaseAsync(TimeSpan.FromSeconds(30));
+                if (string.IsNullOrEmpty(leaseId))
+                    throw new NullReferenceException();
 
-                var current = history.Data.Where(_ => _.Timestamp > mid).ToList();
-                var previous = history.Data.Where(_ => _.Timestamp < mid).ToList();
-                history.Current.Picks = current.Count();
-                history.Current.Wins = current.Count(_ => _.Victory == true);
-                history.Previous.Picks = previous.Count;
-                history.Previous.Wins = previous.Count(_ => _.Victory == true);
-            };
-            await ProcessBlob(blob, updateFn, log);
+                return AccessCondition.GenerateLeaseCondition(leaseId);
+            });
+
+            try
+            {
+                var input = await blob.DownloadTextAsync(ac, null, null);
+                var data = JsonConvert.DeserializeObject<HeroHistory>(input);
+
+                {
+                    var victory = match.Victory(player);
+                    var date = DateTimeOffset.FromUnixTimeSeconds(match.start_time);
+                    var bounds = date.AddDays(-6);
+                    var mid = date.AddDays(-3);
+
+                    data.Total.Picks++;
+                    if (victory)
+                        data.Total.Wins++;
+                    else
+                        data.Total.Loses++;
+
+                    data.Data.Add(new HeroHistoryVictory() { 
+                        MatchId = match.match_id, 
+                        Timestamp = date, 
+                        Victory = victory 
+                    });
+                    data.Data.RemoveAll(_ => _.Timestamp < bounds);
+
+                    var current = data.Data.Where(_ => _.Timestamp > mid).ToList();
+                    var previous = data.Data.Where(_ => _.Timestamp < mid).ToList();
+                    data.Current.Picks = current.Count();
+                    data.Current.Wins = current.Count(_ => _.Victory == true);
+                    data.Previous.Picks = previous.Count;
+                    data.Previous.Wins = previous.Count(_ => _.Victory == true);
+                }
+
+                var output = JsonConvert.SerializeObject(data);
+                await blob.UploadTextAsync(output, ac, null, null);
+            }
+            finally
+            {
+                await blob.ReleaseLeaseAsync(ac, null, null);
+            }
         }
 
         private async Task UpdateDetails(Match match, Player player, IBinder binder, ILogger log)
@@ -171,7 +217,13 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                 {
                     var attr = new BlobAttribute(string.Format(HISTORY_PATH, hero.Id));
                     var history = await ReadData<HeroHistory>(binder, attr);
-                    data.Add(hero.Id, history);
+                    var model = new HeroHistoryData()
+                    {
+                        Total = history.Total,
+                        Current = history.Current,
+                        Previous = history.Previous
+                    };
+                    data.Add(hero.Id, model);
                 }
                 catch (Exception)
                 {
@@ -213,8 +265,8 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                     },
                     Previous = new DTO.HeroSummaryHistory()
                     {
-                        Picks = data.Current.Picks,
-                        Wins = data.Current.Wins,
+                        Picks = data.Previous.Picks,
+                        Wins = data.Previous.Wins,
                     },
                 };
                 collection.Add(item);
@@ -286,6 +338,35 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                 .ToList();
 
             return details;
+        }
+
+        public List<DTO.DraftPoolHero> GetPool()
+        {
+            var draftPool = this.metaClient.GetHeroes()
+                .Select(_ => new DTO.DraftPoolHero()
+                {
+                    Id = _.Id,
+                    Enabled = _.AbilityDraftEnabled,
+                    Name = _.Name,
+                    Image = _.ImageBanner,
+                    Abilities = _.Abilities
+                        .Where(x => x.AbilityBehaviors.Contains("DOTA_ABILITY_BEHAVIOR_HIDDEN") == false || x.HasScepterUpgrade == true)
+                        .Where(x => x.AbilityBehaviors.Contains("DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE") == false || x.HasScepterUpgrade == true)
+                        .Select(x => new DTO.DraftPoolAbility()
+                        {
+                            Id = x.Id,
+                            Name = x.Name,
+                            Image = x.Image,
+                            IsUltimate = x.IsUltimate,
+                            HasUpgrade = x.HasScepterUpgrade,
+                            Enabled = x.AbilityDraftEnabled,
+                        }).ToList()
+                })
+                .OrderBy(_ => _.Primary ? 0 : 1)
+                .ThenBy(_ => _.Name)
+                .ToList();
+
+            return draftPool;
         }
     }
 }

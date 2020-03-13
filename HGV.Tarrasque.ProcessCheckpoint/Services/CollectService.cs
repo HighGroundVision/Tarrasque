@@ -2,7 +2,7 @@
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchDetails;
 using HGV.Tarrasque.Common.Exceptions;
-using HGV.Tarrasque.Common.Models;
+using HGV.Tarrasque.ProcessCheckpoint.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -60,7 +60,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             catch (BelowLimitException)
             {
                 log.LogError("Below Limit");
-                await Task.Delay(TimeSpan.FromMinutes(5));
+                await Task.Delay(TimeSpan.FromMinutes(3));
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("429"))
             {
@@ -70,7 +70,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             catch (HttpRequestException ex) when (ex.Message.Contains("500"))
             {
                 log.LogError("Service Error");
-                await Task.Delay(TimeSpan.FromMinutes(5));
+                await Task.Delay(TimeSpan.FromMinutes(3));
             }
             catch (Exception ex)
             {

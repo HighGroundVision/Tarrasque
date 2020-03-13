@@ -1,7 +1,6 @@
 ﻿using Dawn;
 using HGV.Daedalus;
 using HGV.Daedalus.GetMatchHistory;
-using HGV.Tarrasque.Common.Models;
 using HGV.Tarrasque.ProcessCheckpoint.Models;
 using Humanizer;
 using Microsoft.Extensions.Logging;

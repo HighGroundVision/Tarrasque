@@ -73,5 +73,18 @@ namespace HGV.Tarrasque.ProcessHeroes
                 return new OkObjectResult(details);
             }
         }
+
+        [FunctionName("FnDraftPool")]
+        public IActionResult DraftPool(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "draft/pool")] HttpRequest req,
+            IBinder binder,
+            ILogger log)
+        {
+            using (new Timer("FnDraftPool", log))
+            {
+                var pool = this.heroService.GetPool();
+                return new OkObjectResult(pool);
+            }
+        }
     }
 }

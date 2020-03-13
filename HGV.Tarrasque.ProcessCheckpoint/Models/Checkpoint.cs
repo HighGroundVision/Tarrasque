@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HGV.Tarrasque.Common.Models
+namespace HGV.Tarrasque.ProcessCheckpoint.Models
 {
     public class Checkpoint
     {

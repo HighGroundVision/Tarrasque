@@ -6,6 +6,7 @@ namespace HGV.Tarrasque.ProcessHeroes.Models
 {
     public class HeroHistoryVictory
     {
+        public ulong MatchId { get; set; }
         public DateTimeOffset Timestamp {get; set;}
         public bool Victory { get; set; }
     }
@@ -14,6 +15,7 @@ namespace HGV.Tarrasque.ProcessHeroes.Models
     {
         public int Picks { get; set; }
         public int Wins { get; set; }
+        public int Loses { get; set; }
     }
 
     public class HeroHistoryData

@@ -208,7 +208,13 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
                 {
                     var attr = new BlobAttribute(string.Format(HISTORY_PATH, ability.Id));
                     var history = await ReadData<AbilityHistory>(binder, attr);
-                    data.Add(ability.Id, history);
+                    var model = new AbilityHistoryData()
+                    {
+                        Total = history.Total,
+                        Current = history.Current,
+                        Previous = history.Previous
+                    };
+                    data.Add(ability.Id, model);
                 }
                 catch (Exception)
                 {
