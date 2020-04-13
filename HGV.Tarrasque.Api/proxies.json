@@ -78,13 +78,6 @@
       },
       "backendUri": "https://%ABILITIES_HOST%/api/ability/{id}"
     },
-    "LeaderboardGlobal": {
-      "matchCondition": {
-        "methods": [ "GET" ],
-        "route": "/api/leaderboard/global"
-      },
-      "backendUri": "https://%PLAYERS_HOST%/api/leaderboard/global"
-    },
     "LeaderboardRegional": {
       "matchCondition": {
         "methods": [ "GET" ],

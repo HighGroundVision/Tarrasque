@@ -15,7 +15,9 @@ namespace HGV.Tarrasque.ProcessHeroes.DTO
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string Image { get; set; }
+        public string ImageIcon { get; set; }
+        public string ImageBanner { get; set; }
+        public string ImageProfile { get; set; }
         public HeroSummaryHistory Total { get; set; } = new HeroSummaryHistory();
         public HeroSummaryHistory Current { get; set; } = new HeroSummaryHistory();
         public HeroSummaryHistory Previous { get; set; } = new HeroSummaryHistory();

@@ -27,7 +27,7 @@ namespace HGV.Tarrasque.ProcessRegions.Services
     {
         private const string SUMMARY_PATH = "hgv-regions/{0}/summary.json";
         private const string HISTORY_PATH = "hgv-regions/{0}/history.json";
-        private const string HISTORY_DELIMITER = "yy-MM-dd-HH";
+        private const string HISTORY_DELIMITER = "yyyy-MM-dd:HH";
 
         private readonly MetaClient metaClient;
 
@@ -128,18 +128,20 @@ namespace HGV.Tarrasque.ProcessRegions.Services
         {
             var collection = new List<DTO.Region>();
 
-            var regions = metaClient.GetRegions();
+            var regions = metaClient.GetRegionsMeta();
             foreach (var region in regions)
             {
                 try
                 {
-                    var attr = new BlobAttribute(string.Format(SUMMARY_PATH, region.Key));
+                    var attr = new BlobAttribute(string.Format(SUMMARY_PATH, region.id));
                     var data = await ReadData<RegionSummary>(binder, attr);
 
                     var item = new DTO.Region()
                     {
-                        Id = region.Key,
-                        Name = region.Value,
+                        Id = region.id,
+                        Name = region.name,
+                        Latitude = region.latitude,
+                        Longitude = region.longitude,
                         Total = data.Total,
                     };
                     collection.Add(item);
@@ -159,8 +161,8 @@ namespace HGV.Tarrasque.ProcessRegions.Services
             var history = await ReadData<RegionHistory>(binder, attr);
             var collection = history.Data
                 .GroupBy(_ => _.ToString(HISTORY_DELIMITER))
-                .Select(_ => new { Region = _.Key, Total = _.Count() })
-                .ToDictionary(_ => _.Region, _ => _.Total);
+                .Select(_ => new { Key = _.Key, Total = _.Count() })
+                .ToDictionary(_ => _.Key, _ => _.Total);
 
             return collection;
         }

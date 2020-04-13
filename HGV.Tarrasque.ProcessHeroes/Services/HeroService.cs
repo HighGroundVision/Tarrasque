@@ -31,7 +31,7 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
         private const string SUMMARY_PATH = "hgv-heroes/summary.json";
         private const string HISTORY_PATH = "hgv-heroes/{0}/history.json";
         private const string DETAILS_PATH = "hgv-heroes/{0}/details.json";
-        private const string HISTORY_DELIMITER = "yy-MM-dd";
+        private const string HISTORY_DELIMITER = "yyyy-MM-dd";
 
         private readonly MetaClient metaClient;
 
@@ -110,72 +110,27 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
             var attr = new BlobAttribute(string.Format(HISTORY_PATH, player.hero_id));
             var blob = await binder.BindAsync<CloudBlockBlob>(attr);
 
-            try
+            Action<HeroHistory> updateFn = (history) =>
             {
-                var exist = await blob.ExistsAsync();
-                if (!exist)
-                {
-                    var data = new HeroHistory();
-                    var json = JsonConvert.SerializeObject(data);
-                    await blob.UploadTextAsync(json);
-                }
-            }
-            catch (Exception)
-            {
-            }
+                var victory = match.Victory(player);
+                var date = DateTimeOffset.FromUnixTimeSeconds(match.start_time);
+                var bounds = date.AddDays(-6);
+                var mid = date.AddDays(-3);
 
-            var policy = Policy
-                .Handle<Exception>()
-                .WaitAndRetryForeverAsync((n) => TimeSpan.FromMilliseconds(100));
+                history.Total.Picks++;
+                history.Total.Wins += victory ? 1 : 0;
 
-            var ac = await policy.ExecuteAsync(async () =>
-            {
-                var leaseId = await blob.AcquireLeaseAsync(TimeSpan.FromSeconds(30));
-                if (string.IsNullOrEmpty(leaseId))
-                    throw new NullReferenceException();
+                history.Data.Add(new HeroHistoryVictory() { Timestamp = date, Victory = victory });
+                history.Data.RemoveAll(_ => _.Timestamp < bounds);
 
-                return AccessCondition.GenerateLeaseCondition(leaseId);
-            });
-
-            try
-            {
-                var input = await blob.DownloadTextAsync(ac, null, null);
-                var data = JsonConvert.DeserializeObject<HeroHistory>(input);
-
-                {
-                    var victory = match.Victory(player);
-                    var date = DateTimeOffset.FromUnixTimeSeconds(match.start_time);
-                    var bounds = date.AddDays(-6);
-                    var mid = date.AddDays(-3);
-
-                    data.Total.Picks++;
-                    if (victory)
-                        data.Total.Wins++;
-                    else
-                        data.Total.Loses++;
-
-                    data.Data.Add(new HeroHistoryVictory() { 
-                        MatchId = match.match_id, 
-                        Timestamp = date, 
-                        Victory = victory 
-                    });
-                    data.Data.RemoveAll(_ => _.Timestamp < bounds);
-
-                    var current = data.Data.Where(_ => _.Timestamp > mid).ToList();
-                    var previous = data.Data.Where(_ => _.Timestamp < mid).ToList();
-                    data.Current.Picks = current.Count();
-                    data.Current.Wins = current.Count(_ => _.Victory == true);
-                    data.Previous.Picks = previous.Count;
-                    data.Previous.Wins = previous.Count(_ => _.Victory == true);
-                }
-
-                var output = JsonConvert.SerializeObject(data);
-                await blob.UploadTextAsync(output, ac, null, null);
-            }
-            finally
-            {
-                await blob.ReleaseLeaseAsync(ac, null, null);
-            }
+                var current = history.Data.Where(_ => _.Timestamp > mid).ToList();
+                var previous = history.Data.Where(_ => _.Timestamp < mid).ToList();
+                history.Current.Picks = current.Count();
+                history.Current.Wins = current.Count(_ => _.Victory == true);
+                history.Previous.Picks = previous.Count;
+                history.Previous.Wins = previous.Count(_ => _.Victory == true);
+            };
+            await ProcessBlob(blob, updateFn, log);
         }
 
         private async Task UpdateDetails(Match match, Player player, IBinder binder, ILogger log)
@@ -252,7 +207,9 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                 {
                     Id = hero.Id,
                     Name = hero.Name,
-                    Image = hero.ImageIcon,
+                    ImageIcon = hero.ImageIcon,
+                    ImageBanner = hero.ImageBanner,
+                    ImageProfile = hero.ImageProfile,
                     Total = new DTO.HeroSummaryHistory()
                     {
                         Picks = data.Total.Picks,
@@ -305,14 +262,17 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                 .ToList();
 
             details.Talents = combos.Data
-                .Join(hero.Talents, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.HeroDetailCombo()
+                .Join(hero.Talents, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.HeroTalent()
                 {
                     Id = rhs.Id,
-                    Name = rhs.Key,
+                    Level = rhs.Level,
+                    Key = rhs.Key,
+                    Description = rhs.Description,
                     Picks = lhs.Picks,
                     Wins = lhs.Wins,
                 })
-                .ToList();
+                .GroupBy(_ => _.Level)
+                .ToDictionary(_ => _.Key, _ => _.ToList());
 
             details.Abilities = combos.Data
                 .Join(hero.Abilities, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.HeroDetailCombo()
@@ -322,10 +282,13 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                     Image  = rhs.Image,
                     Picks = lhs.Picks,
                     Wins = lhs.Wins,
+                    IsUltimate = rhs.IsUltimate
                 })
+                .OrderByDescending(_ => _.IsUltimate ? 0 : 1)
                 .ToList();
 
             details.Combos = combos.Data
+                .Where(_ => hero.Abilities.Any(x => x.Id ==_.Id) == false)
                 .Join(skills, _ => _.Id, _ => _.Id, (lhs, rhs) => new DTO.HeroDetailCombo()
                 {
                     Id = rhs.Id,
@@ -333,8 +296,10 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                     Image = rhs.Image,
                     Picks = lhs.Picks,
                     Wins = lhs.Wins,
+                    IsUltimate = rhs.IsUltimate
                 })
-                .OrderByDescending(_ => _.WinRate)
+                .Where(_ => _.Picks > 10)
+                .OrderByDescending(_ => _.Picks)
                 .ToList();
 
             return details;
@@ -348,7 +313,9 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                     Id = _.Id,
                     Enabled = _.AbilityDraftEnabled,
                     Name = _.Name,
-                    Image = _.ImageBanner,
+                    ImageBanner = _.ImageBanner,
+                    ImageIcon = _.ImageIcon,
+                    ImageProfile = _.ImageProfile,
                     Abilities = _.Abilities
                         .Where(x => x.AbilityBehaviors.Contains("DOTA_ABILITY_BEHAVIOR_HIDDEN") == false || x.HasScepterUpgrade == true)
                         .Where(x => x.AbilityBehaviors.Contains("DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE") == false || x.HasScepterUpgrade == true)
@@ -358,12 +325,12 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                             Name = x.Name,
                             Image = x.Image,
                             IsUltimate = x.IsUltimate,
-                            HasUpgrade = x.HasScepterUpgrade,
+                            HasUpgrade = x.HasScepterUpgrade && !x.IsGrantedByScepter,
+                            IsGranted = x.IsGrantedByScepter,
                             Enabled = x.AbilityDraftEnabled,
                         }).ToList()
                 })
-                .OrderBy(_ => _.Primary ? 0 : 1)
-                .ThenBy(_ => _.Name)
+                .OrderBy(_ => _.Name)
                 .ToList();
 
             return draftPool;

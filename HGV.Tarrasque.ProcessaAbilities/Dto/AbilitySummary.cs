@@ -6,11 +6,11 @@ namespace HGV.Tarrasque.ProcessAbilities.DTO
 {
     public class AbilitySummaryHistory
     {
-        public int Picks { get; set; }
-        public int Wins { get; set; }
-        public int Ancestry { get; set; }
-        public int Priority { get; set; }
-        public float WinRate { get { return this.Wins / (float)this.Picks; } }
+        //public int Picks { get; set; }
+        //public int Wins { get; set; }
+        public float Ancestry { get; set; }
+        public float Priority { get; set; }
+        public float WinRate { get; set; }
     }
 
     public class AbilitySummary

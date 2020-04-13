@@ -46,20 +46,6 @@ namespace HGV.Tarrasque.ProcessPlayers
             }
         }
 
-        [FunctionName("FnGlobalLeaderboard")]
-        public async Task<IActionResult> GlobalLeaderboard(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "leaderboard/global")] HttpRequest req,
-            IBinder binder,
-            ILogger log)
-        {
-            using (new Timer("FnGlobalLeaderboard", log))
-            {
-                var id = PlayerService.GLOBAL_LEADERBOARD_REGION;
-                var leaderboard = await this.playerService.GetLeaderboard(id, binder, log);
-                return new OkObjectResult(leaderboard);
-            }
-        }
-
         [FunctionName("FnRegionalLeaderboard")]
         public async Task<IActionResult> RegionalLeaderboard(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "leaderboard/region/{id}")] HttpRequest req,
@@ -71,23 +57,6 @@ namespace HGV.Tarrasque.ProcessPlayers
             {
                 var leaderboard = await this.playerService.GetLeaderboard(id, binder, log);
                 return new OkObjectResult(leaderboard);
-            }
-        }
-
-        [FunctionName("FnPlayerSummary")]
-        public async Task<IActionResult> PlayerSummary(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "player/summary/{id}")] HttpRequest req,
-            int id,
-            IBinder binder,
-            ILogger log)
-        {
-            using (new Timer("FnPlayerSummary", log))
-            {
-                var colleciton = await this.playerService.GetSummaries(id, binder, log);
-                if (colleciton == null)
-                    return new NotFoundResult();
-                else
-                    return new OkObjectResult(colleciton);
             }
         }
 

@@ -54,8 +54,6 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
                 foreach (var item in collection)
                     foreach (var q in queues)
                         await q.AddAsync(item);
-
-                await Task.Delay(TimeSpan.FromSeconds(1));
             }
             catch (BelowLimitException)
             {

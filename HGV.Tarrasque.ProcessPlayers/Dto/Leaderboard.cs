@@ -14,5 +14,7 @@ namespace HGV.Tarrasque.ProcessPlayers.DTO
         public int Wins { get; set; }
         public double WinRate { get; set; }
         public double Ranking { get; set; }
+        public string RegionName { get; set; }
+        public string RegionGroup { get; set; }
     }
 }

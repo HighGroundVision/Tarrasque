@@ -13,6 +13,7 @@ namespace HGV.Tarrasque.ProcessPlayers.Models
     public class History
     {
         public ulong MatchId { get; set; }
+        public int Region { get; set; }
         public DateTimeOffset Date { get; set; }
         public bool Victory { get; set; }
         public int Hero { get; set; }

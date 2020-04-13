@@ -78,7 +78,7 @@ namespace HGV.Tarrasque.ProcessCheckpoint.Services
             var status = new CheckpointStatus();
             status.TotalAllMatches = checkpoint.Total;
             status.TotalADMatches = checkpoint.ADTotal;
-            status.Delta = (DateTimeOffset.UtcNow - checkpoint.Timestamp).Humanize(2);
+            status.Delta = (DateTimeOffset.UtcNow - checkpoint.Timestamp).Humanize(3);
 
             foreach (var item in queues)
             {

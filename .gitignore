@@ -262,3 +262,9 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/HGV.Tarrasque.Api/Properties/PublishProfiles/*.pubxml
+/HGV.Tarrasque.ProcessCheckpoint/Properties/PublishProfiles/*.pubxml
+/HGV.Tarrasque.ProcessHeroes/Properties/PublishProfiles/*.pubxml
+/HGV.Tarrasque.ProcessPlayers/Properties/PublishProfiles/*.pubxml
+/HGV.Tarrasque.ProcessRegions/Properties/PublishProfiles/*.pubxml
+/HGV.Tarrasque.ProcessaAbilities/Properties/PublishProfiles/*.pubxml

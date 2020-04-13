@@ -13,6 +13,7 @@ namespace HGV.Tarrasque.ProcessHeroes.DTO
         public string Name { get; set; }
         public int Index { get; set; }
         public int Total { get; set; }
+        public float Percentage { get { return Index / (float)Total;} }
         public double Value { get; set; }
     }
 
@@ -72,7 +73,7 @@ namespace HGV.Tarrasque.ProcessHeroes.DTO
                 this.GetAttribute("Vision Nighttime", _ => _.VisionNighttimeRange),
             };
 
-            return collection;
+            return collection.OrderByDescending(_ => _.Percentage).ToList();
         }
     }
 }

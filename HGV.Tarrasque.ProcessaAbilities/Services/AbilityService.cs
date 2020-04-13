@@ -31,7 +31,7 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
         private const string SUMMARY_PATH = "hgv-abilities/summary.json";
         private const string HISTORY_PATH = "hgv-abilities/{0}/history.json";
         private const string DETAILS_PATH = "hgv-abilities/{0}/details.json";
-        private const string HISTORY_DELIMITER = "yy-MM-dd";
+        private const string HISTORY_DELIMITER = "yyyy-MM-dd";
 
         private readonly MetaClient metaClient;
 
@@ -230,6 +230,13 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
             var attr = new BlobAttribute(string.Format(SUMMARY_PATH));
             var summary = await ReadData<AbilitySummary>(binder, attr);
 
+            //var maxTotalAncestry = summary.Data.Max(_ => _.Value.Total.Ancestry);
+            //var maxTotalPriority = summary.Data.Max(_ => _.Value.Total.Priority);
+            //var maxCurrentAncestry = summary.Data.Max(_ => _.Value.Current.Ancestry);
+            //var maxCurrentPriority = summary.Data.Max(_ => _.Value.Current.Priority);
+            //var maxPreviousAncestry = summary.Data.Max(_ => _.Value.Previous.Ancestry);
+            //var maxPreviousPriority = summary.Data.Max(_ => _.Value.Previous.Priority);
+
             var collection = new List<DTO.AbilitySummary>();
             var abilities = this.metaClient.GetSkills().Where(_ => _.AbilityDraftEnabled);
             foreach (var ability in abilities)
@@ -246,24 +253,21 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
                     Image = ability.Image,
                     Total = new DTO.AbilitySummaryHistory()
                     {
-                        Ancestry = data.Total.Ancestry,
-                        Picks = data.Total.Picks,
-                        Priority = data.Total.Priority,
-                        Wins = data.Total.Wins,
+                        WinRate = (float)data.Total.Wins / data.Total.Picks, 
+                        Ancestry = (float)data.Total.Ancestry,
+                        Priority = (float)data.Total.Priority,
                     },
                     Current = new DTO.AbilitySummaryHistory()
                     {
-                        Ancestry = data.Current.Ancestry,
-                        Picks = data.Current.Picks,
-                        Priority = data.Current.Priority,
-                        Wins = data.Current.Wins,
+                        WinRate = (float)data.Current.Wins / data.Current.Picks,
+                        Ancestry = (float)data.Current.Ancestry,
+                        Priority = (float)data.Current.Priority,
                     },
                     Previous = new DTO.AbilitySummaryHistory()
                     {
-                        Ancestry = data.Current.Ancestry,
-                        Picks = data.Current.Picks,
-                        Priority = data.Current.Priority,
-                        Wins = data.Current.Wins,
+                        WinRate = (float)data.Previous.Wins / data.Previous.Picks,
+                        Ancestry = (float)data.Previous.Ancestry,
+                        Priority = (float)data.Previous.Priority,
                     },
                 };
                 collection.Add(item);
@@ -306,11 +310,11 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
                {
                    Id = rhs.Id,
                    Name = rhs.Name,
-                   Image = rhs.ImageBanner,
+                   Image = rhs.ImageProfile,
                    Picks = lhs.Picks,
                    Wins = lhs.Wins,
                })
-               .OrderByDescending(_ => _.WinRate)
+               .OrderByDescending(_ => _.Picks)
                .ToList();
 
             details.Abilities = combos.Abilities
@@ -321,8 +325,10 @@ namespace HGV.Tarrasque.ProcessAbilities.Services
                    Image = rhs.Image,
                    Picks = lhs.Picks,
                    Wins = lhs.Wins,
+                   IsUltimate = rhs.IsUltimate
                })
-               .OrderByDescending(_ => _.WinRate)
+               .Where(_ => _.Picks > 10)
+               .OrderByDescending(_ => _.Picks)
                .ToList();
 
             return details;

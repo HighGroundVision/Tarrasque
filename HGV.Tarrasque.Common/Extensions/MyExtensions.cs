@@ -9,7 +9,10 @@ namespace HGV.Tarrasque.Common.Extensions
     {
         public static bool Victory(this HGV.Daedalus.GetMatchDetails.Match match, HGV.Daedalus.GetMatchDetails.Player player)
         {
-            return (match.radiant_win && player.player_slot < 5);
+            if (match.radiant_win)
+                return player.player_slot < 5;
+            else
+                return player.player_slot > 5;
         }
 
         public static int PickPriority(this HGV.Daedalus.GetMatchDetails.Player player)

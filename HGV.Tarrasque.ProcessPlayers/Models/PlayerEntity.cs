@@ -1,4 +1,6 @@
 ﻿using Microsoft.WindowsAzure.Storage.Table;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace HGV.Tarrasque.ProcessPlayers.Models
 {

@@ -12,6 +12,8 @@ namespace HGV.Tarrasque.ProcessAbilities.DTO
         public int Picks { get; set; }
         public int Wins { get; set; }
         public float WinRate { get { return this.Wins / (float)this.Picks; } }
+
+        public bool IsUltimate { get; set; }
     }
 
     public class AbilityDetailHistory
