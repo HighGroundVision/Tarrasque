@@ -328,6 +328,7 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                             HasUpgrade = x.HasScepterUpgrade && !x.IsGrantedByScepter,
                             IsGranted = x.IsGrantedByScepter,
                             Enabled = x.AbilityDraftEnabled,
+                            Notes = x.AbilityDraftNote
                         }).ToList()
                 })
                 .OrderBy(_ => _.Name)

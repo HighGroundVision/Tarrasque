@@ -253,17 +253,20 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
             var identities = collection.Select(_ => _.SteamId).ToArray();
             var profiles = await GetProfiles(regionId, identities);
 
-            collection = collection.Join(profiles, _ => _.SteamId, _ => _.steamid, (lhs, rhs) => new LeaderboardEntity()
+            if(profiles.Count() > 0)
             {
-                RegionId = lhs.RegionId,
-                AccountId = lhs.AccountId,
-                Ranking = lhs.Ranking,
-                Total = lhs.Total,
-                WinRate = lhs.WinRate,
-                Persona =  rhs.personaname,
-                Avatar =  rhs.avatarfull
-            }).ToList();
-
+                collection = collection.Join(profiles, _ => _.SteamId, _ => _.steamid, (lhs, rhs) => new LeaderboardEntity()
+                {
+                    RegionId = lhs.RegionId,
+                    AccountId = lhs.AccountId,
+                    Ranking = lhs.Ranking,
+                    Total = lhs.Total,
+                    WinRate = lhs.WinRate,
+                    Persona = rhs.personaname,
+                    Avatar = rhs.avatarfull
+                }).ToList();
+            }
+            
             var model = new LeaderboardDetails()
             {
                 Region = regionId,
@@ -287,8 +290,8 @@ namespace HGV.Tarrasque.ProcessPlayers.Services
                 .WaitAndRetryAsync(new[]
                 {
                     TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(2),
-                    TimeSpan.FromSeconds(3)
+                    TimeSpan.FromSeconds(5),
+                    TimeSpan.FromSeconds(10)
                 });
 
             var commonResilience = Policy.WrapAsync(cachePolicy, retryPolicy);

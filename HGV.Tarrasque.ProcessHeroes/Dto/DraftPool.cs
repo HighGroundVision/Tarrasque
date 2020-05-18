@@ -14,7 +14,8 @@ namespace HGV.Tarrasque.ProcessHeroes.DTO
         public bool HasUpgrade { get; set; }
         public bool IsGranted { get; set; }
         public bool Enabled { get; set; }
-        
+        public string Notes { get; set; }
+
         // public bool HasData { get; set; }
     }
 

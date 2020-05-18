@@ -1,20 +1,6 @@
 {
   "$schema": "http://json.schemastore.org/proxies",
   "proxies": {
-    "WebSite": {
-      "matchCondition": {
-        "route": "/",
-        "methods": [ "GET", "HEAD", "OPTIONS" ]
-      },
-      "backendUri": "https://flicker.z9.web.core.windows.net/index.html"
-    },
-    "WebContent": {
-      "matchCondition": {
-        "route": "/{*path}",
-        "methods": [ "GET", "HEAD", "OPTIONS" ]
-      },
-      "backendUri": "https://flicker.z9.web.core.windows.net/{path}"
-    },
     "CheckpointStart": {
       "matchCondition": {
         "methods": [ "GET" ],
