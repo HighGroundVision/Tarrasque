@@ -317,6 +317,7 @@ namespace HGV.Tarrasque.ProcessHeroes.Services
                     ImageIcon = _.ImageIcon,
                     ImageProfile = _.ImageProfile,
                     Abilities = _.Abilities
+                        .Where(x => x.Id != 5386)
                         .Where(x => x.AbilityBehaviors.Contains("DOTA_ABILITY_BEHAVIOR_HIDDEN") == false || x.HasScepterUpgrade == true)
                         .Where(x => x.AbilityBehaviors.Contains("DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE") == false || x.HasScepterUpgrade == true)
                         .Select(x => new DTO.DraftPoolAbility()
